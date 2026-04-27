@@ -1,0 +1,1811 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PlacaCtrl</title>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f0f2f5;
+  --s1: #ffffff;
+  --s2: #f7f8fa;
+  --s3: #eef0f4;
+  --border: #e2e6ed;
+  --border2: #cdd2db;
+  --acc: #1a56db;
+  --acc-hover: #1648c0;
+  --acc-light: #e8effc;
+  --acc2: #2563eb;
+  --acc3: #3b82f6;
+  --text: #111827;
+  --sub: #6b7280;
+  --faint: #9ca3af;
+  --green: #16a34a;
+  --green-bg: #f0fdf4;
+  --red: #dc2626;
+  --red-bg: #fef2f2;
+  --yellow: #d97706;
+  --yellow-bg: #fffbeb;
+  --blue: #1a56db;
+  --blue-bg: #e8effc;
+  --sidebar-bg: #0d2137;
+  --sidebar-text: #b8cfe0;
+  --sidebar-active: #1a56db;
+  --sidebar-hover: #162d47;
+  font-size: 14px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Lato',Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+/* LAYOUT */
+.app{display:flex;min-height:100vh;}
+.sidebar{width:220px;background:var(--sidebar-bg);border-right:none;display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:50;box-shadow:2px 0 12px rgba(0,0,0,.08);}
+.content{margin-left:220px;flex:1;min-height:100vh;}
+
+/* SIDEBAR */
+.logo{padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,.08);}
+.logo-text{font-family:'Lato',Arial,sans-serif;font-size:18px;font-weight:900;letter-spacing:1px;color:#fff;}
+.logo-text em{color:#60a5fa;font-style:normal;}
+.logo-sub{font-size:10px;color:#5a7d99;margin-top:2px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;}
+.nav{padding:16px 12px;flex:1;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;color:var(--sidebar-text);font-size:13px;font-weight:400;transition:all .15s;margin-bottom:2px;border:1px solid transparent;}
+.nav-item:hover{color:#fff;background:var(--sidebar-hover);}
+.nav-item.active{color:#fff;background:var(--sidebar-active);border-color:rgba(255,255,255,.1);}
+.nav-icon{font-size:15px;width:20px;text-align:center;}
+.nav-badge{margin-left:auto;background:#dc2626;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;font-weight:700;}
+.sidebar-bottom{padding:16px 12px;border-top:1px solid rgba(255,255,255,.08);}
+.btn-new{width:100%;padding:10px;background:var(--acc);color:#fff;border:none;border-radius:8px;font-family:'Lato',Arial,sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;letter-spacing:.3px;}
+.btn-new:hover{background:var(--acc-hover);}
+
+/* TOPBAR */
+.topbar{padding:16px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--s1);position:sticky;top:0;z-index:40;box-shadow:0 1px 4px rgba(0,0,0,.04);}
+.page-title{font-family:'Lato',Arial,sans-serif;font-size:19px;font-weight:700;color:var(--text);letter-spacing:-.2px;}
+.topbar-actions{display:flex;gap:10px;}
+
+/* MAIN AREA */
+.page{display:none;padding:28px;}
+.page.active{display:block;}
+
+/* STATS GRID */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
+.stat{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+.stat-label{font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:10px;font-weight:700;}
+.stat-val{font-family:'Lato',Arial,sans-serif;font-size:30px;font-weight:900;line-height:1;}
+.stat-sub{font-size:11px;color:var(--sub);margin-top:6px;}
+.c-green{color:var(--green);}
+.c-red{color:var(--red);}
+.c-yellow{color:var(--yellow);}
+.c-acc{color:var(--acc);}
+.c-blue{color:var(--blue);}
+
+/* FILTERS BAR */
+.filters{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:flex-end;}
+.filter-group{display:flex;flex-direction:column;gap:5px;}
+.filter-label{font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:1px;font-weight:700;}
+select.fi,input.fi{background:var(--s1);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:'Lato',Arial,sans-serif;font-size:13px;padding:8px 12px;outline:none;transition:border-color .15s;}
+select.fi:focus,input.fi:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(26,86,219,.1);}
+.btn{padding:8px 16px;border-radius:7px;border:none;cursor:pointer;font-family:'Lato',Arial,sans-serif;font-size:12px;font-weight:700;transition:all .15s;white-space:nowrap;letter-spacing:.2px;}
+.btn-acc{background:var(--acc);color:#fff;}
+.btn-acc:hover{background:var(--acc-hover);}
+.btn-ghost{background:transparent;color:var(--sub);border:1px solid var(--border);}
+.btn-ghost:hover{color:var(--text);border-color:var(--border2);background:var(--s2);}
+.btn-red{background:var(--red-bg);color:var(--red);border:1px solid #fecaca;}
+.btn-red:hover{background:#fee2e2;}
+.btn-sm{padding:5px 11px;font-size:11px;}
+
+/* TABLE */
+.table-wrap{background:var(--s1);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+table{width:100%;border-collapse:collapse;}
+th{background:var(--s2);padding:11px 16px;text-align:left;font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border);}
+td{padding:11px 16px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--text);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#f8f9fb;}
+.empty-row td{text-align:center;color:var(--faint);padding:40px;font-size:13px;}
+
+/* BADGE */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;}
+.badge-green{background:var(--green-bg);color:var(--green);border:1px solid #bbf7d0;}
+.badge-red{background:var(--red-bg);color:var(--red);border:1px solid #fecaca;}
+.badge-yellow{background:var(--yellow-bg);color:var(--yellow);border:1px solid #fde68a;}
+.badge-blue{background:var(--blue-bg);color:var(--blue);border:1px solid #bfdbfe;}
+.badge-gray{background:var(--s3);color:var(--sub);border:1px solid var(--border);}
+
+/* CALENDAR GRID */
+.cal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;}
+.cal-cell{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.03);}
+.cal-cell:hover{border-color:var(--acc);box-shadow:0 2px 8px rgba(26,86,219,.1);}
+.cal-cell.vazio{border-color:#fecaca;background:var(--red-bg);}
+.cal-cell.ocupado{border-color:#bbf7d0;background:var(--green-bg);}
+.cal-cell.urgente{border-color:#fde68a;background:var(--yellow-bg);}
+.cal-num{font-family:'Lato',Arial,sans-serif;font-size:18px;font-weight:900;line-height:1;}
+.cal-periodo{font-size:10px;color:var(--sub);margin-top:2px;}
+.cal-placa{font-size:11px;color:var(--faint);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cal-cliente{font-size:12px;font-weight:700;margin-top:4px;}
+.cal-prazo{font-size:10px;margin-top:4px;}
+
+/* DISPONIBILIDADE */
+.disp-result{margin-top:20px;}
+.disp-card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:16px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+.disp-info{flex:1;}
+.disp-title{font-family:'Lato',Arial,sans-serif;font-size:15px;font-weight:700;}
+.disp-sub{font-size:12px;color:var(--sub);margin-top:4px;}
+.disp-slots{display:flex;flex-direction:column;gap:6px;margin-top:12px;}
+.disp-slot{display:flex;align-items:center;justify-content:space-between;background:var(--s2);border-radius:8px;padding:8px 12px;font-size:12px;}
+
+/* VENDA */
+.venda-form{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:24px;max-width:700px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px;}
+.form-group{display:flex;flex-direction:column;gap:6px;}
+.form-label{font-size:11px;color:var(--sub);font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+.form-input{background:var(--s1);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:'Lato',Arial,sans-serif;font-size:13px;padding:9px 12px;outline:none;transition:all .15s;width:100%;}
+.form-input:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(26,86,219,.1);}
+textarea.form-input{resize:vertical;min-height:80px;}
+.checkbox-row{display:flex;align-items:center;gap:8px;cursor:pointer;}
+.checkbox-row input{accent-color:var(--acc);width:16px;height:16px;}
+
+/* CLIENTES */
+.cliente-card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:16px;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.03);}
+.cliente-card:hover{border-color:var(--acc);box-shadow:0 2px 8px rgba(26,86,219,.08);}
+.cliente-avatar{width:42px;height:42px;border-radius:10px;background:var(--acc-light);display:flex;align-items:center;justify-content:center;font-family:'Lato',Arial,sans-serif;font-size:16px;font-weight:900;color:var(--acc);flex-shrink:0;}
+.cliente-info{flex:1;}
+.cliente-nome{font-family:'Lato',Arial,sans-serif;font-size:15px;font-weight:700;color:var(--text);}
+.cliente-meta{font-size:12px;color:var(--sub);margin-top:3px;}
+.cliente-stats{display:flex;gap:16px;text-align:right;}
+.cstat{font-size:11px;color:var(--faint);}
+.cstat strong{display:block;font-size:14px;font-weight:700;color:var(--text);}
+
+/* MODALS */
+.overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.overlay.open{display:flex;}
+.modal{background:var(--s1);border:1px solid var(--border);border-radius:16px;padding:28px;width:540px;max-width:96vw;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.15);}
+.modal-lg{width:700px;}
+.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;}
+.modal-title{font-family:'Lato',Arial,sans-serif;font-size:17px;font-weight:700;color:var(--text);}
+.close-x{background:none;border:none;color:var(--sub);cursor:pointer;font-size:18px;line-height:1;transition:color .15s;}
+.close-x:hover{color:var(--text);}
+.modal-foot{display:flex;gap:10px;justify-content:flex-end;margin-top:22px;padding-top:18px;border-top:1px solid var(--border);}
+
+/* SECTION HEADER */
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.sec-title{font-family:'Lato',Arial,sans-serif;font-size:15px;font-weight:700;color:var(--text);}
+
+/* RELATÓRIO PRINT */
+@media print {
+  .sidebar,.topbar,.no-print{display:none!important;}
+  .content{margin-left:0!important;}
+  .page{display:block!important;padding:0!important;}
+  #print-area{display:block!important;}
+  body{background:#fff;color:#000;}
+}
+#print-area{display:none;}
+
+/* ALERTAS PAGE */
+.alerta-item{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:14px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.03);}
+.alerta-item.warn{border-color:#fde68a;background:var(--yellow-bg);}
+.alerta-item.crit{border-color:#fecaca;background:var(--red-bg);}
+.alerta-icon{font-size:22px;width:28px;text-align:center;}
+.alerta-body{flex:1;}
+.alerta-body strong{font-size:13px;display:block;margin-bottom:2px;color:var(--text);}
+.alerta-body span{font-size:12px;color:var(--sub);}
+
+/* TABS INSIDE PAGE */
+.inner-tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--s3);border:1px solid var(--border);padding:4px;border-radius:9px;width:fit-content;}
+.inner-tab{padding:7px 18px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700;color:var(--sub);transition:all .15s;letter-spacing:.2px;}
+.inner-tab.active{background:var(--s1);color:var(--acc);box-shadow:0 1px 4px rgba(0,0,0,.1);border:1px solid var(--border);}
+
+/* LEAD STATUS */
+.badge-novo{background:var(--blue-bg);color:var(--blue);border:1px solid #bfdbfe;}
+.badge-negociacao{background:var(--yellow-bg);color:var(--yellow);border:1px solid #fde68a;}
+.badge-fechado{background:var(--green-bg);color:var(--green);border:1px solid #bbf7d0;}
+.badge-perdido{background:var(--red-bg);color:var(--red);border:1px solid #fecaca;}
+.check-placa{display:flex;align-items:center;gap:6px;background:var(--s2);border:1px solid var(--border);border-radius:7px;padding:6px 10px;cursor:pointer;font-size:12px;transition:all .15s;font-weight:400;}
+.check-placa input{accent-color:var(--acc);}
+.check-placa:has(input:checked){border-color:var(--acc);background:var(--acc-light);color:var(--acc);font-weight:700;}
+
+/* MAPA DE PLACAS */
+.mapa-wrap{min-width:700px;}
+.mapa-table{border-collapse:separate;border-spacing:3px;width:100%;}
+.mapa-th-bs{width:90px;min-width:90px;padding:8px 10px;background:var(--sidebar-bg);color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;border-radius:6px;text-align:center;position:sticky;left:0;z-index:2;}
+.mapa-th-placa{padding:8px 12px;background:var(--sidebar-bg);color:#fff;font-size:11px;font-weight:700;border-radius:6px;text-align:center;min-width:130px;}
+.mapa-cell{
+  padding:0;border-radius:8px;cursor:pointer;
+  transition:all .15s;position:relative;
+  min-width:130px;height:54px;vertical-align:middle;
+  user-select:none;
+}
+.mapa-cell:hover{transform:scale(1.02);box-shadow:0 2px 8px rgba(0,0,0,.12);}
+.mapa-cell.selected{outline:2.5px solid var(--acc);outline-offset:1px;transform:scale(1.02);box-shadow:0 0 0 4px rgba(26,86,219,.15);}
+.mapa-cell-inner{padding:6px 10px;border-radius:8px;height:54px;display:flex;flex-direction:column;justify-content:center;}
+.mapa-cell.ocupado .mapa-cell-inner{background:#dcfce7;border:1px solid #86efac;}
+.mapa-cell.vazio .mapa-cell-inner{background:#fef2f2;border:1px solid #fca5a5;}
+.mapa-cell.urgente .mapa-cell-inner{background:#fffbeb;border:1px solid #fcd34d;}
+.mapa-cell.ocupado.selected .mapa-cell-inner{background:#bbf7d0;}
+.mapa-cell.vazio.selected .mapa-cell-inner{background:#fecaca;}
+.mapa-nome{font-size:12px;font-weight:700;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mapa-nome.vazio{color:#dc2626;font-style:italic;}
+.mapa-datas{font-size:10px;color:#6b7280;margin-top:2px;}
+.mapa-prazo{font-size:10px;color:#d97706;margin-top:1px;font-weight:700;}
+.mapa-row-bs{background:var(--s2);}
+.mapa-bs-cell{background:var(--sidebar-bg);border-radius:6px;padding:8px 10px;text-align:center;position:sticky;left:0;z-index:1;}
+.mapa-bs-num{font-family:'Lato',Arial,sans-serif;font-size:13px;font-weight:900;color:#fff;}
+.mapa-bs-per{font-size:9px;color:#5a7d99;margin-top:2px;}
+
+@media(max-width:768px){
+  .sidebar{width:100%;height:auto;position:relative;flex-direction:row;flex-wrap:wrap;}
+  .content{margin-left:0;}
+  .stats{grid-template-columns:repeat(2,1fr);}
+  .form-row,.form-row-3{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+        <div class="logo">
+    <div style="font-family:'Lato',Arial,sans-serif;font-size:32px;font-weight:900;font-style:italic;color:#fff;letter-spacing:-1px;line-height:1">AZ</div>
+    <div class="logo-sub" style="margin-top:6px">Gestão de Outdoor</div>
+  </div>
+  <div class="nav">
+    <div class="nav-item active" onclick="navTo('dashboard',this)"><span class="nav-icon">📊</span> Dashboard</div>
+    <div class="nav-item" onclick="navTo('mapa',this)"><span class="nav-icon">🗺️</span> Mapa de Placas</div>
+    <div class="nav-item" onclick="navTo('calendario',this)"><span class="nav-icon">📅</span> Calendário</div>
+    <div class="nav-item" onclick="navTo('disponivel',this)"><span class="nav-icon">🔍</span> Disponibilidade</div>
+    <div class="nav-item" onclick="navTo('leads',this)"><span class="nav-icon">🎯</span> Leads <span class="nav-badge" id="nb-leads"></span></div>
+    <div class="nav-item" onclick="navTo('vendas',this)"><span class="nav-icon">💰</span> Vendas</div>
+    <div class="nav-item" onclick="navTo('clientes',this)"><span class="nav-icon">👥</span> Clientes</div>
+    <div class="nav-item" onclick="navTo('relatorio',this)"><span class="nav-icon">📄</span> Relatórios</div>
+    <div class="nav-item" onclick="navTo('alertas',this)"><span class="nav-icon">🔔</span> Alertas <span class="nav-badge" id="nb-alertas"></span></div>
+    <div class="nav-item" onclick="navTo('placas',this)"><span class="nav-icon">🪧</span> Placas</div>
+  </div>
+  <div class="sidebar-bottom">
+    <button class="btn-new" onclick="openModal('m-exibicao')">+ Nova Exibição</button>
+  </div>
+</nav>
+
+<!-- CONTENT -->
+<div class="content">
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="page-title" id="topbar-title">Dashboard</div>
+  <div style="display:flex;align-items:center;gap:16px">
+    <span id="sync-status" style="font-size:11px;color:var(--faint)">💾 Local</span>
+    <button class="btn btn-ghost btn-sm" onclick="loadFromSheets()" title="Recarregar do Google Sheets">↻ Sync</button>
+  </div>
+  <div class="topbar-actions" id="topbar-actions"></div>
+</div>
+
+<!-- ===== DASHBOARD ===== -->
+<div class="page active" id="page-dashboard">
+  <div class="stats" id="stats-box"></div>
+
+  <div class="filters">
+    <div class="filter-group">
+      <div class="filter-label">Mês</div>
+      <select class="fi" id="f-mes" onchange="renderDash()">
+        <option value="">Todos</option>
+        <option value="1">Janeiro</option><option value="2">Fevereiro</option>
+        <option value="3">Março</option><option value="4">Abril</option>
+        <option value="5">Maio</option><option value="6">Junho</option>
+        <option value="7">Julho</option><option value="8">Agosto</option>
+        <option value="9">Setembro</option><option value="10">Outubro</option>
+        <option value="11">Novembro</option><option value="12">Dezembro</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <div class="filter-label">Bi-semana</div>
+      <input class="fi" id="f-bs" type="number" min="1" max="52" placeholder="Ex: 20" onchange="renderDash()" style="width:90px">
+    </div>
+    <div class="filter-group">
+      <div class="filter-label">Placa</div>
+      <select class="fi" id="f-placa-dash" onchange="renderDash()">
+        <option value="">Todas</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <div class="filter-label">Status</div>
+      <select class="fi" id="f-status" onchange="renderDash()">
+        <option value="">Todos</option>
+        <option value="vazio">Vazios</option>
+        <option value="ocupado">Ocupados</option>
+      </select>
+    </div>
+    <div style="align-self:flex-end">
+      <button class="btn btn-ghost btn-sm" onclick="limparFiltros()">Limpar filtros</button>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Bi-semana</th><th>Período</th><th>Placa</th><th>Cliente</th>
+        <th>Prazo Arte</th><th>Status</th><th>Valor</th><th></th>
+      </tr></thead>
+      <tbody id="dash-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== MAPA DE PLACAS ===== -->
+<div class="page" id="page-mapa">
+
+  <!-- toolbar -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+      <div class="filter-group">
+        <div class="filter-label">Ano</div>
+        <select class="fi" id="mapa-ano" onchange="renderMapa()" style="width:90px">
+          <option value="2026">2026</option><option value="2025">2025</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">Mês</div>
+        <select class="fi" id="mapa-mes" onchange="renderMapa()">
+          <option value="">Todos</option>
+          <option value="1">Jan</option><option value="2">Fev</option><option value="3">Mar</option>
+          <option value="4">Abr</option><option value="5">Mai</option><option value="6">Jun</option>
+          <option value="7">Jul</option><option value="8">Ago</option><option value="9">Set</option>
+          <option value="10">Out</option><option value="11">Nov</option><option value="12">Dez</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;align-items:flex-end;padding-bottom:1px;">
+        <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--sub)"><span style="width:12px;height:12px;border-radius:3px;background:#dcfce7;border:1px solid #86efac;display:inline-block"></span>Ocupado</span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--sub)"><span style="width:12px;height:12px;border-radius:3px;background:#fef2f2;border:1px solid #fca5a5;display:inline-block"></span>Vazio</span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--sub)"><span style="width:12px;height:12px;border-radius:3px;background:#fffbeb;border:1px solid #fcd34d;display:inline-block"></span>Prazo urgente</span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--acc)"><span style="width:12px;height:12px;border-radius:3px;background:var(--acc-light);border:2px solid var(--acc);display:inline-block"></span>Selecionado</span>
+      </div>
+    </div>
+    <!-- ação em lote -->
+    <div id="mapa-toolbar-sel" style="display:none;align-items:center;gap:10px;background:var(--acc-light);border:1px solid var(--acc);border-radius:10px;padding:8px 14px;">
+      <span style="font-size:12px;font-weight:700;color:var(--acc)" id="mapa-sel-count">0 selecionadas</span>
+      <button class="btn btn-acc btn-sm" onclick="mapaAcao('reservar')">Reservar</button>
+      <button class="btn btn-sm" style="background:#dcfce7;color:#16a34a;border:1px solid #86efac" onclick="mapaAcao('liberar')">Liberar</button>
+      <button class="btn btn-ghost btn-sm" onclick="mapaAcao('mudar')">Mudar cliente</button>
+      <button class="btn btn-ghost btn-sm" onclick="mapaClearSel()">✕ Limpar</button>
+    </div>
+  </div>
+
+  <!-- grid container -->
+  <div style="overflow-x:auto;">
+    <div id="mapa-grid"></div>
+  </div>
+</div>
+
+<!-- MODAL AÇÃO MAPA -->
+<div class="overlay" id="m-mapa-acao">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="m-mapa-titulo">Ação em lote</div>
+      <button class="close-x" onclick="closeModal('m-mapa-acao')">✕</button>
+    </div>
+    <div id="m-mapa-body"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('m-mapa-acao')">Cancelar</button>
+      <button class="btn btn-acc" id="m-mapa-confirm" onclick="mapaConfirmar()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CALENDÁRIO ===== -->
+<div class="page" id="page-calendario">
+  <div class="filters">
+    <div class="filter-group">
+      <div class="filter-label">Mês</div>
+      <select class="fi" id="cal-mes" onchange="renderCal()">
+        <option value="">Todos</option>
+        <option value="1">Janeiro</option><option value="2">Fevereiro</option>
+        <option value="3">Março</option><option value="4">Abril</option>
+        <option value="5">Maio</option><option value="6">Junho</option>
+        <option value="7">Julho</option><option value="8">Agosto</option>
+        <option value="9">Setembro</option><option value="10">Outubro</option>
+        <option value="11">Novembro</option><option value="12">Dezembro</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <div class="filter-label">Placa</div>
+      <select class="fi" id="cal-placa" onchange="renderCal()"><option value="">Todas</option></select>
+    </div>
+  </div>
+  <div class="cal-grid" id="cal-grid"></div>
+</div>
+
+<!-- ===== DISPONIBILIDADE ===== -->
+<div class="page" id="page-disponivel">
+  <div style="background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:22px;max-width:560px;margin-bottom:24px;">
+    <div class="sec-title" style="margin-bottom:16px">🔍 Consultar vagas disponíveis</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Data início</label>
+        <input class="form-input" type="date" id="disp-de">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Data fim</label>
+        <input class="form-input" type="date" id="disp-ate">
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:16px">
+      <label class="form-label">Placa específica (opcional)</label>
+      <select class="form-input" id="disp-placa"><option value="">Qualquer placa</option></select>
+    </div>
+    <button class="btn btn-acc" onclick="consultarDisp()">Consultar disponibilidade</button>
+  </div>
+  <div id="disp-result"></div>
+</div>
+
+<!-- ===== VENDAS ===== -->
+<!-- ===== LEADS ===== -->
+<div class="page" id="page-leads">
+  <div class="inner-tabs">
+    <div class="inner-tab active" onclick="leadsTab('lista',this)">Pipeline</div>
+    <div class="inner-tab" onclick="leadsTab('novo',this)">Novo Lead</div>
+  </div>
+  <div id="lt-lista">
+    <div class="filters" style="margin-bottom:16px">
+      <div class="filter-group">
+        <div class="filter-label">Status</div>
+        <select class="fi" id="f-lead-status" onchange="renderLeads()">
+          <option value="">Todos</option>
+          <option value="novo">Novo</option>
+          <option value="negociacao">Em negociação</option>
+          <option value="fechado">Fechado</option>
+          <option value="perdido">Perdido</option>
+        </select>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Empresa</th><th>Contato</th><th>Placas</th><th>Bi-semanas</th>
+          <th>Orçamento</th><th>Responsável</th><th>Data</th><th>Status</th><th></th>
+        </tr></thead>
+        <tbody id="leads-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+  <div id="lt-novo" style="display:none">
+    <div class="venda-form">
+      <input type="hidden" id="ld-id">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Empresa / Cliente *</label><input class="form-input" id="ld-empresa" placeholder="Ex: Honda"></div>
+        <div class="form-group"><label class="form-label">Nome do contato</label><input class="form-input" id="ld-contato" placeholder="Ex: Maria Silva"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Responsável interno *</label><input class="form-input" id="ld-resp" placeholder="Quem está atendendo"></div>
+        <div class="form-group"><label class="form-label">Data do contato</label><input class="form-input" type="date" id="ld-data"></div>
+      </div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label class="form-label">Placas de interesse</label>
+        <div id="ld-placas-check" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:6px"></div>
+      </div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label class="form-label">Bi-semanas de interesse (separadas por vírgula)</label>
+        <input class="form-input" id="ld-bisemanas" placeholder="Ex: 20, 22, 26">
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Orçamento estimado (R$)</label><input class="form-input" type="number" id="ld-orcamento" placeholder="0,00"></div>
+        <div class="form-group"><label class="form-label">Status</label>
+          <select class="form-input" id="ld-status">
+            <option value="novo">Novo</option>
+            <option value="negociacao">Em negociação</option>
+            <option value="fechado">Fechado</option>
+            <option value="perdido">Perdido</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:18px"><label class="form-label">Observações</label><textarea class="form-input" id="ld-obs" placeholder="Detalhes, próximo passo..."></textarea></div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-acc" onclick="salvarLead()">Salvar Lead</button>
+        <button class="btn btn-ghost" id="ld-btn-venda" style="display:none" onclick="converterLeadVenda()">💰 Converter em Venda</button>
+        <button class="btn btn-red" id="ld-btn-del" style="display:none" onclick="excluirLead()">Excluir</button>
+        <button class="btn btn-ghost" onclick="leadsTab('lista',document.querySelectorAll('.inner-tab')[0])">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-vendas">
+  <div class="inner-tabs">
+    <div class="inner-tab active" onclick="vendaTab('lista',this)">Histórico</div>
+    <div class="inner-tab" onclick="vendaTab('nova',this)">Nova Venda</div>
+  </div>
+  <div id="vt-lista">
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Data</th><th>Cliente</th><th>Placa</th><th>Bi-semana</th>
+          <th>Valor</th><th>Tipo</th><th>Bonif.</th><th></th>
+        </tr></thead>
+        <tbody id="vendas-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+  <div id="vt-nova" style="display:none">
+    <div class="venda-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Cliente *</label>
+          <select class="form-input" id="v-cliente"><option value="">Selecione...</option></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Exibição (Placa + Bi-semana) *</label>
+          <select class="form-input" id="v-exibicao"><option value="">Selecione...</option></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Valor tabela (R$)</label>
+          <input class="form-input" type="number" id="v-tabela" placeholder="0,00" oninput="calcDesconto()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Valor acordado (R$)</label>
+          <input class="form-input" type="number" id="v-acordado" placeholder="0,00" oninput="calcDesconto()">
+        </div>
+      </div>
+      <div style="background:var(--s2);border-radius:8px;padding:12px;margin-bottom:14px;font-size:12px;color:var(--sub)" id="v-desconto-info">Preencha os valores acima</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Tipo de negociação</label>
+          <select class="form-input" id="v-tipo">
+            <option value="normal">Normal</option>
+            <option value="desconto">Desconto</option>
+            <option value="permuta">Permuta</option>
+            <option value="bonificacao">Bonificação</option>
+            <option value="cortesia">Cortesia</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Data da venda</label>
+          <input class="form-input" type="date" id="v-data">
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label class="form-label">Observação / Detalhes da bonificação</label>
+        <textarea class="form-input" id="v-obs" placeholder="Ex: Permuta com serviços gráficos, desconto 15% por fidelidade..."></textarea>
+      </div>
+      <div style="display:flex;gap:12px;">
+        <button class="btn btn-acc" onclick="salvarVenda()">Registrar Venda</button>
+        <button class="btn btn-ghost" onclick="vendaTab('lista',document.querySelector('.inner-tab'))">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CLIENTES ===== -->
+<div class="page" id="page-clientes">
+  <div class="filters">
+    <input class="fi" type="text" id="busca-cliente" placeholder="Buscar cliente..." oninput="renderClientes()" style="width:220px">
+    <button class="btn btn-acc btn-sm" onclick="openModal('m-cliente')">+ Novo Cliente</button>
+  </div>
+  <div id="clientes-list"></div>
+</div>
+
+<!-- ===== RELATÓRIOS ===== -->
+<div class="page" id="page-relatorio">
+  <div style="display:flex;gap:24px;flex-wrap:wrap;">
+
+    <!-- por cliente -->
+    <div style="background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:22px;flex:1;min-width:280px;">
+      <div class="sec-title" style="margin-bottom:14px">📋 Relatório por Cliente</div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label class="form-label">Cliente</label>
+        <select class="form-input" id="rel-cliente"><option value="">Escolha...</option></select>
+      </div>
+      <div class="form-group" style="margin-bottom:16px">
+        <label class="form-label">Ano</label>
+        <select class="form-input" id="rel-ano">
+          <option value="2026">2026</option>
+          <option value="2025">2025</option>
+        </select>
+      </div>
+      <button class="btn btn-acc" onclick="abrirRelCliente()">Gerar Relatório</button>
+    </div>
+
+    <!-- por período -->
+    <div style="background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:22px;flex:1;min-width:280px;">
+      <div class="sec-title" style="margin-bottom:14px">📊 Relatório de Ocupação</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Mês inicial</label>
+          <select class="form-input" id="rel-mes1">
+            <option value="1">Janeiro</option><option value="2">Fevereiro</option>
+            <option value="3">Março</option><option value="4">Abril</option>
+            <option value="5" selected>Maio</option><option value="6">Junho</option>
+            <option value="7">Julho</option><option value="8">Agosto</option>
+            <option value="9">Setembro</option><option value="10">Outubro</option>
+            <option value="11">Novembro</option><option value="12">Dezembro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Mês final</label>
+          <select class="form-input" id="rel-mes2">
+            <option value="1">Janeiro</option><option value="2">Fevereiro</option>
+            <option value="3">Março</option><option value="4">Abril</option>
+            <option value="5">Maio</option><option value="6">Junho</option>
+            <option value="7">Julho</option><option value="8">Agosto</option>
+            <option value="9">Setembro</option><option value="10">Outubro</option>
+            <option value="11">Novembro</option><option value="12" selected>Dezembro</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-acc" onclick="abrirRelOcupacao()">Gerar Relatório</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ALERTAS ===== -->
+<div class="page" id="page-alertas">
+  <div id="alertas-list"></div>
+</div>
+
+<!-- ===== PLACAS ===== -->
+<div class="page" id="page-placas">
+  <div class="filters">
+    <button class="btn btn-acc btn-sm" onclick="openModal('m-placa')">+ Nova Placa</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>#</th><th>Nome</th><th>Localização</th><th>Exibições</th><th>Ocupação</th><th></th></tr></thead>
+      <tbody id="placas-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- end content -->
+</div><!-- end app -->
+
+<!-- ========== MODALS ========== -->
+
+<!-- EXIBIÇÃO -->
+<div class="overlay" id="m-exibicao">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Nova Exibição</div>
+      <button class="close-x" onclick="closeModal('m-exibicao')">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Bi-semana *</label><input class="form-input" type="number" id="ne-bs" placeholder="Ex: 20"></div>
+      <div class="form-group"><label class="form-label">Placa *</label><select class="form-input" id="ne-placa"><option value="">Selecione...</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Início *</label><input class="form-input" type="date" id="ne-ini"></div>
+      <div class="form-group"><label class="form-label">Fim *</label><input class="form-input" type="date" id="ne-fim"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Cliente (vazio = disponível)</label><input class="form-input" id="ne-cli" placeholder="Ex: Honda" list="list-clientes"></div>
+      <div class="form-group"><label class="form-label">Prazo envio arte</label><input class="form-input" type="date" id="ne-prazo"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Observação</label><input class="form-input" id="ne-obs" placeholder="Opcional"></div>
+    <datalist id="list-clientes"></datalist>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('m-exibicao')">Cancelar</button>
+      <button class="btn btn-acc" onclick="salvarExibicao()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDITAR EXIBIÇÃO -->
+<div class="overlay" id="m-editar">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Editar Exibição</div>
+      <button class="close-x" onclick="closeModal('m-editar')">✕</button>
+    </div>
+    <input type="hidden" id="ed-id">
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Bi-semana</label><input class="form-input" type="number" id="ed-bs"></div>
+      <div class="form-group"><label class="form-label">Placa</label><select class="form-input" id="ed-placa"></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Início</label><input class="form-input" type="date" id="ed-ini"></div>
+      <div class="form-group"><label class="form-label">Fim</label><input class="form-input" type="date" id="ed-fim"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Cliente</label><input class="form-input" id="ed-cli" list="list-clientes2"><datalist id="list-clientes2"></datalist></div>
+      <div class="form-group"><label class="form-label">Prazo arte</label><input class="form-input" type="date" id="ed-prazo"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Observação</label><input class="form-input" id="ed-obs"></div>
+    <div class="modal-foot">
+      <button class="btn btn-red" onclick="excluirEx()">Excluir</button>
+      <button class="btn btn-ghost" onclick="closeModal('m-editar')">Cancelar</button>
+      <button class="btn btn-acc" onclick="updateEx()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- CLIENTE -->
+<div class="overlay" id="m-cliente">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="m-cli-title">Novo Cliente</div>
+      <button class="close-x" onclick="closeModal('m-cliente')">✕</button>
+    </div>
+    <input type="hidden" id="cli-id">
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Nome / Empresa *</label><input class="form-input" id="cli-nome" placeholder="Ex: Honda Franca"></div>
+      <div class="form-group"><label class="form-label">Contato</label><input class="form-input" id="cli-contato" placeholder="Nome do responsável"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Telefone / WhatsApp</label><input class="form-input" id="cli-tel" placeholder="(17) 99999-9999"></div>
+      <div class="form-group"><label class="form-label">E-mail</label><input class="form-input" id="cli-email" type="email" placeholder="contato@empresa.com"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">CNPJ / CPF</label><input class="form-input" id="cli-doc" placeholder="00.000.000/0001-00"></div>
+      <div class="form-group"><label class="form-label">Segmento</label><input class="form-input" id="cli-seg" placeholder="Ex: Automotivo, Saúde..."></div>
+    </div>
+    <div class="form-group"><label class="form-label">Observações</label><textarea class="form-input" id="cli-obs" placeholder="Notas internas sobre o cliente..."></textarea></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('m-cliente')">Cancelar</button>
+      <button class="btn btn-acc" onclick="salvarCliente()">Salvar Cliente</button>
+    </div>
+  </div>
+</div>
+
+<!-- PLACA -->
+<div class="overlay" id="m-placa">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Nova Placa</div>
+      <button class="close-x" onclick="closeModal('m-placa')">✕</button>
+    </div>
+    <div class="form-group" style="margin-bottom:14px"><label class="form-label">Nome da placa *</label><input class="form-input" id="np-nome" placeholder="Ex: Direita em frente Unifran"></div>
+    <div class="form-group" style="margin-bottom:14px"><label class="form-label">Localização</label><input class="form-input" id="np-local" placeholder="Ex: Av. Major Nicácio, Unifran"></div>
+    <div class="form-group"><label class="form-label">Valor tabela mensal (R$)</label><input class="form-input" type="number" id="np-valor" placeholder="0,00"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('m-placa')">Cancelar</button>
+      <button class="btn btn-acc" onclick="salvarPlaca()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- RELATÓRIO MODAL -->
+<div class="overlay" id="m-relatorio">
+  <div class="modal modal-lg">
+    <div class="modal-head">
+      <div class="modal-title" id="rel-modal-title">Relatório</div>
+      <button class="close-x" onclick="closeModal('m-relatorio')">✕</button>
+    </div>
+    <div id="rel-body"></div>
+    <div class="modal-foot no-print">
+      <button class="btn btn-ghost" onclick="closeModal('m-relatorio')">Fechar</button>
+      <button class="btn btn-ghost" onclick="copiarRel()">📋 Copiar WhatsApp</button>
+      <button class="btn btn-acc" onclick="window.print()">🖨️ PDF / Imprimir</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRINT AREA -->
+<div id="print-area"></div>
+
+<script>
+// ============ CALENDÁRIO OFICIAL BI-SEMANAS 2026 ============
+const BISEMANAS_2026 = {
+  2: {ini:"2025-12-29",fim:"2026-01-11"},
+  4: {ini:"2026-01-12",fim:"2026-01-25"},
+  6: {ini:"2026-01-26",fim:"2026-02-08"},
+  8: {ini:"2026-02-09",fim:"2026-02-22"},
+  10: {ini:"2026-02-23",fim:"2026-03-08"},
+  12: {ini:"2026-03-09",fim:"2026-03-22"},
+  14: {ini:"2026-03-23",fim:"2026-04-05"},
+  16: {ini:"2026-04-06",fim:"2026-04-19"},
+  18: {ini:"2026-04-20",fim:"2026-05-03"},
+  20: {ini:"2026-05-04",fim:"2026-05-17"},
+  22: {ini:"2026-05-18",fim:"2026-05-31"},
+  24: {ini:"2026-06-01",fim:"2026-06-14"},
+  26: {ini:"2026-06-15",fim:"2026-06-28"},
+  28: {ini:"2026-06-29",fim:"2026-07-12"},
+  30: {ini:"2026-07-13",fim:"2026-07-26"},
+  32: {ini:"2026-07-27",fim:"2026-08-09"},
+  34: {ini:"2026-08-10",fim:"2026-08-23"},
+  36: {ini:"2026-08-24",fim:"2026-09-06"},
+  38: {ini:"2026-09-07",fim:"2026-09-20"},
+  40: {ini:"2026-09-21",fim:"2026-10-04"},
+  42: {ini:"2026-10-05",fim:"2026-10-18"},
+  44: {ini:"2026-10-19",fim:"2026-11-01"},
+  46: {ini:"2026-11-02",fim:"2026-11-15"},
+  48: {ini:"2026-11-16",fim:"2026-11-29"},
+  50: {ini:"2026-11-30",fim:"2026-12-13"},
+  52: {ini:"2026-12-14",fim:"2026-12-27"},
+};
+// Helper: get dates from BS number
+const bsDates = (bs) => BISEMANAS_2026[bs] || null;
+const bsList2026 = Object.keys(BISEMANAS_2026).map(Number);
+
+// ============ CONFIG ============
+// Cole aqui a URL do seu Apps Script depois de publicar
+const GAS_URL = 'SUA_URL_AQUI';
+
+let _saving = false;
+let _pendingSave = false;
+
+// ============ STATE ============
+const DEFAULT = {
+  placas:[
+    {id:1,nome:'Rotatória 1',local:'Rotatória Unifran',valor:1200},
+    {id:2,nome:'Rotatória 2',local:'Rotatória Unifran',valor:1200},
+    {id:3,nome:'Rotatória 3',local:'Rotatória Unifran',valor:1200},
+    {id:4,nome:'Unifran 4',local:'Unifran',valor:1000},
+    {id:5,nome:'Unifran 5',local:'Unifran',valor:1000},
+  ],
+  leads:[
+    {id:1,empresa:'Exemplo Lead',contato:'João',responsavel:'Equipe',data:'2026-04-20',placas:[1],bisemanas:[20,22],orcamento:2400,status:'novo',obs:'Interessado em 2 inserções'},
+  ],
+  clientes:[
+    {id:1,nome:'Honda',contato:'Gerente de Marketing',tel:'(17) 99000-0001',email:'marketing@honda.com',doc:'',seg:'Automotivo',obs:''},
+    {id:2,nome:'Logton',contato:'',tel:'',email:'',doc:'',seg:'',obs:''},
+    {id:3,nome:'Fernando',contato:'',tel:'',email:'',doc:'',seg:'',obs:''},
+    {id:4,nome:'Nino',contato:'',tel:'',email:'',doc:'',seg:'',obs:''},
+  ],
+  exibicoes:[
+    {id:1,bs:20,placa:1,ini:'2026-05-04',fim:'2026-05-17',cli:'Honda',prazo:'2026-04-28',obs:''},
+    {id:2,bs:22,placa:2,ini:'2026-05-18',fim:'2026-05-31',cli:'Honda',prazo:'2026-05-12',obs:''},
+    {id:3,bs:26,placa:3,ini:'2026-06-15',fim:'2026-06-28',cli:'Honda',prazo:'2026-06-09',obs:''},
+    {id:4,bs:20,placa:4,ini:'2026-05-04',fim:'2026-05-17',cli:'',prazo:'',obs:''},
+    {id:5,bs:22,placa:3,ini:'2026-05-18',fim:'2026-05-31',cli:'Fernando',prazo:'2026-05-10',obs:''},
+    {id:6,bs:24,placa:1,ini:'2026-06-01',fim:'2026-06-14',cli:'',prazo:'',obs:''},
+    {id:7,bs:8,placa:1,ini:'2026-02-09',fim:'2026-02-22',cli:'Logton',prazo:'2026-02-05',obs:''},
+    {id:8,bs:14,placa:2,ini:'2026-03-23',fim:'2026-04-05',cli:'',prazo:'',obs:''},
+    {id:9,bs:28,placa:4,ini:'2026-06-29',fim:'2026-07-12',cli:'',prazo:'',obs:''},
+    {id:10,bs:30,placa:5,ini:'2026-07-13',fim:'2026-07-26',cli:'',prazo:'',obs:''},
+    {id:11,bs:16,placa:2,ini:'2026-04-06',fim:'2026-04-19',cli:'Honda',prazo:'2026-04-01',obs:''},
+    {id:12,bs:16,placa:3,ini:'2026-04-06',fim:'2026-04-19',cli:'',prazo:'',obs:''},
+    {id:13,bs:18,placa:1,ini:'2026-04-20',fim:'2026-05-03',cli:'',prazo:'',obs:''},
+    {id:14,bs:18,placa:2,ini:'2026-04-20',fim:'2026-05-03',cli:'Logton',prazo:'2026-04-15',obs:''},
+  ],
+  vendas:[
+    {id:1,data:'2026-04-01',cli:'Honda',exId:1,tabela:1200,acordado:1000,tipo:'desconto',obs:'Desconto fidelidade'},
+    {id:2,data:'2026-04-01',cli:'Honda',exId:2,tabela:1200,acordado:1200,tipo:'normal',obs:''},
+    {id:3,data:'2026-04-01',cli:'Honda',exId:3,tabela:1500,acordado:1500,tipo:'normal',obs:''},
+  ],
+  nextId:20
+};
+
+// Load from localStorage first (offline fallback), then sync from Sheets
+let S = JSON.parse(localStorage.getItem('pctrl_v2')||'null') || DEFAULT;
+
+// Save: always write localStorage immediately, then sync to Sheets
+function save() {
+  localStorage.setItem('pctrl_v2', JSON.stringify(S));
+  syncToSheets();
+}
+
+function syncToSheets() {
+  if(!GAS_URL || GAS_URL === 'SUA_URL_AQUI') return;
+  if(_saving){ _pendingSave = true; return; }
+  _saving = true;
+  showSyncStatus('saving');
+  fetch(GAS_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {'Content-Type':'text/plain'},
+    body: JSON.stringify({action:'save', data: S})
+  })
+  .then(()=>{
+    _saving = false;
+    showSyncStatus('ok');
+    if(_pendingSave){ _pendingSave=false; syncToSheets(); }
+  })
+  .catch(err=>{
+    _saving = false;
+    showSyncStatus('error');
+    console.warn('Sync error:', err);
+  });
+}
+
+function loadFromSheets() {
+  if(!GAS_URL || GAS_URL === 'SUA_URL_AQUI') {
+    showSyncStatus('local');
+    return;
+  }
+  showSyncStatus('loading');
+  fetch(GAS_URL + '?action=load')
+  .then(r=>r.json())
+  .then(data=>{
+    if(data && data.placas) {
+      S = data;
+      if(!S.leads) S.leads=[];
+      localStorage.setItem('pctrl_v2', JSON.stringify(S));
+      populateSelects();
+      renderDash();
+      renderAlertas();
+      updateLeadsBadge();
+      showSyncStatus('ok');
+    }
+  })
+  .catch(err=>{
+    console.warn('Load from Sheets failed, using localStorage:', err);
+    showSyncStatus('local');
+  });
+}
+
+function showSyncStatus(status) {
+  const el = document.getElementById('sync-status');
+  if(!el) return;
+  const map = {
+    loading: {txt:'⟳ Carregando...', color:'var(--sub)'},
+    saving:  {txt:'⟳ Salvando...', color:'var(--yellow)'},
+    ok:      {txt:'✓ Sincronizado', color:'var(--green)'},
+    error:   {txt:'⚠ Erro ao salvar', color:'var(--red)'},
+    local:   {txt:'💾 Local (sem Sheets)', color:'var(--faint)'},
+  };
+  const s = map[status] || map.local;
+  el.textContent = s.txt;
+  el.style.color = s.color;
+}
+
+// ============ UTILS ============
+const fmt = d => { if(!d) return '—'; const [y,m,dd]=d.split('-'); return `${dd}/${m}`; };
+const fmtFull = d => { if(!d) return '—'; const [y,m,dd]=d.split('-'); return `${dd}/${m}/${y}`; };
+const toNum = v => parseFloat(v)||0;
+const R$ = v => 'R$ '+toNum(v).toLocaleString('pt-BR',{minimumFractionDigits:2});
+const today = () => new Date().toISOString().split('T')[0];
+const diasAte = d => { if(!d) return 999; return Math.ceil((new Date(d)-new Date(today()))/86400000); };
+const placa = id => S.placas.find(p=>p.id==id)||{nome:'?',local:''};
+const mesDeData = d => d ? parseInt(d.split('-')[1]) : 0;
+const clienteNomes = () => [...new Set(S.exibicoes.filter(e=>e.cli).map(e=>e.cli))].sort();
+
+// ============ NAV ============
+function navTo(page, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  el.classList.add('active');
+  const titles = {dashboard:'Dashboard',mapa:'Mapa de Placas',calendario:'Calendário de Exibições',disponivel:'Consultar Disponibilidade',leads:'Leads & Pipeline',vendas:'Vendas',clientes:'Clientes',relatorio:'Relatórios',alertas:'Alertas',placas:'Placas'};
+  document.getElementById('topbar-title').textContent = titles[page]||page;
+  renderPage(page);
+}
+
+function renderPage(p) {
+  if(p==='mapa') renderMapa();
+  if(p==='leads') { renderLeads(); popularPlacasCheck(); document.getElementById('ld-data').value=today(); }
+  if(p==='dashboard') renderDash();
+  if(p==='calendario') { populateSelects(); renderCal(); }
+  if(p==='disponivel') populateSelects();
+  if(p==='vendas') renderVendas();
+  if(p==='clientes') renderClientes();
+  if(p==='relatorio') renderRelSelects();
+  if(p==='alertas') renderAlertas();
+  if(p==='placas') renderPlacas();
+}
+
+// ============ SELECTS POPULATAÇÃO ============
+function populateSelects() {
+  const opts = S.placas.map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
+  ['f-placa-dash','cal-placa','disp-placa','ne-placa','ed-placa'].forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
+    const blank = id==='ne-placa'||id==='ed-placa' ? '<option value="">Selecione...</option>' : '<option value="">Todas</option>';
+    el.innerHTML = blank+opts;
+  });
+  const cliOpts = S.clientes.map(c=>`<option value="${c.nome}">${c.nome}</option>`).join('');
+  const vcli = document.getElementById('v-cliente');
+  if(vcli) vcli.innerHTML='<option value="">Selecione...</option>'+cliOpts;
+  const dispPl = document.getElementById('disp-placa');
+  if(dispPl) dispPl.innerHTML='<option value="">Qualquer placa</option>'+opts;
+  // datalists
+  const dlOpts = S.clientes.map(c=>`<option value="${c.nome}">`).join('');
+  ['list-clientes','list-clientes2'].forEach(id=>{ const el=document.getElementById(id); if(el) el.innerHTML=dlOpts; });
+}
+
+// ============ DASHBOARD ============
+function renderDash() {
+  populateSelects();
+  const mes = document.getElementById('f-mes')?.value;
+  const bs = document.getElementById('f-bs')?.value;
+  const pl = document.getElementById('f-placa-dash')?.value;
+  const st = document.getElementById('f-status')?.value;
+
+  let exs = [...S.exibicoes].sort((a,b)=>a.bs-b.bs);
+  if(mes) exs = exs.filter(e=>mesDeData(e.ini)==mes||mesDeData(e.fim)==mes);
+  if(bs) exs = exs.filter(e=>e.bs==bs);
+  if(pl) exs = exs.filter(e=>e.placa==pl);
+  if(st==='vazio') exs = exs.filter(e=>!e.cli);
+  if(st==='ocupado') exs = exs.filter(e=>e.cli);
+
+  // stats
+  const total=exs.length, vaz=exs.filter(e=>!e.cli).length, oc=total-vaz;
+  const urg=exs.filter(e=>e.prazo&&diasAte(e.prazo)>=0&&diasAte(e.prazo)<=5).length;
+  const receitaTotal = S.vendas.reduce((a,v)=>a+toNum(v.acordado),0);
+  document.getElementById('stats-box').innerHTML=`
+    <div class="stat"><div class="stat-label">Total Exibições</div><div class="stat-val c-acc">${total}</div><div class="stat-sub">filtro atual</div></div>
+    <div class="stat"><div class="stat-label">Ocupadas</div><div class="stat-val c-green">${oc}</div><div class="stat-sub">${total?Math.round(oc/total*100):0}% ocupação</div></div>
+    <div class="stat"><div class="stat-label">Vazias</div><div class="stat-val c-red">${vaz}</div><div class="stat-sub">disponíveis</div></div>
+    <div class="stat"><div class="stat-label">Prazos Urgentes</div><div class="stat-val c-yellow">${urg}</div><div class="stat-sub">próximos 5 dias</div></div>
+  `;
+
+  // tabela
+  const tbody = document.getElementById('dash-tbody');
+  if(!exs.length){ tbody.innerHTML='<tr class="empty-row"><td colspan="8">Nenhuma exibição encontrada</td></tr>'; return; }
+  tbody.innerHTML = exs.map(e=>{
+    const venda = S.vendas.find(v=>v.exId===e.id);
+    const ps = !e.prazo?'':diasAte(e.prazo)<0?'c-red':diasAte(e.prazo)<=3?'c-yellow':'c-green';
+    const pd = !e.prazo?'—':diasAte(e.prazo)<0?`Vencido ${Math.abs(diasAte(e.prazo))}d`:diasAte(e.prazo)===0?'HOJE':diasAte(e.prazo)<=5?`${diasAte(e.prazo)} dias`:fmt(e.prazo);
+    return `<tr>
+      <td><b style="font-family:'Lato',Arial,sans-serif">${e.bs}</b></td>
+      <td style="color:var(--sub);font-size:12px">${fmt(e.ini)} → ${fmt(e.fim)}</td>
+      <td style="font-size:12px">${placa(e.placa).nome}</td>
+      <td>${e.cli?`<span class="badge badge-green">● ${e.cli}</span>`:'<span class="badge badge-red">VAZIO</span>'}</td>
+      <td class="${ps}" style="font-size:12px;font-weight:600">${pd}</td>
+      <td>${e.cli?'<span class="badge badge-blue">Contratado</span>':'<span class="badge badge-gray">Disponível</span>'}</td>
+      <td style="font-size:12px">${venda?R$(venda.acordado):'—'}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="abrirEditar(${e.id})">Editar</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function limparFiltros() {
+  ['f-mes','f-bs','f-placa-dash','f-status'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  renderDash();
+}
+
+// ============ CALENDÁRIO ============
+function renderCal() {
+  const mes = document.getElementById('cal-mes')?.value;
+  const pl = document.getElementById('cal-placa')?.value;
+  let exs = [...S.exibicoes].sort((a,b)=>a.bs-b.bs);
+  if(mes) exs = exs.filter(e=>mesDeData(e.ini)==mes||mesDeData(e.fim)==mes);
+  if(pl) exs = exs.filter(e=>e.placa==pl);
+  const grid = document.getElementById('cal-grid');
+  if(!exs.length){ grid.innerHTML='<div style="color:var(--faint);padding:40px">Nenhuma exibição neste período.</div>'; return; }
+  grid.innerHTML = exs.map(e=>{
+    const vaz=!e.cli;
+    const urg=e.prazo&&diasAte(e.prazo)>=0&&diasAte(e.prazo)<=5;
+    let cls = vaz?'vazio':'ocupado'; if(urg) cls+=' urgente';
+    const pd = !e.prazo?'':diasAte(e.prazo)<0?`<span class="c-red" style="font-size:10px">⚠ Prazo vencido</span>`:urg?`<span class="c-yellow" style="font-size:10px">⏰ ${diasAte(e.prazo)}d</span>`:'';
+    return `<div class="cal-cell ${cls}" onclick="abrirEditar(${e.id})">
+      <div class="cal-num" style="color:${vaz?'var(--red)':'var(--green)'}">${e.bs}</div>
+      <div class="cal-periodo">${fmt(e.ini)} — ${fmt(e.fim)}</div>
+      <div class="cal-placa">${placa(e.placa).nome}</div>
+      <div class="cal-cliente" style="color:${vaz?'var(--sub)':'var(--green)'}">${e.cli||'Disponível'}</div>
+      ${pd}
+    </div>`;
+  }).join('');
+}
+
+// ============ DISPONIBILIDADE ============
+function consultarDisp() {
+  const de = document.getElementById('disp-de').value;
+  const ate = document.getElementById('disp-ate').value;
+  const pl = document.getElementById('disp-placa').value;
+  if(!de||!ate){ alert('Preencha as datas'); return; }
+  const dDe = new Date(de), dAte = new Date(ate);
+  let vazios = S.exibicoes.filter(e=>{
+    if(e.cli) return false;
+    const ei=new Date(e.ini), ef=new Date(e.fim);
+    return ei<=dAte && ef>=dDe;
+  });
+  if(pl) vazios = vazios.filter(e=>e.placa==pl);
+  const div = document.getElementById('disp-result');
+  if(!vazios.length){
+    div.innerHTML=`<div style="background:var(--red-bg);border:1px solid var(--red);border-radius:12px;padding:20px;color:var(--red)">Nenhuma vaga disponível neste período para os filtros selecionados.</div>`;
+    return;
+  }
+  div.innerHTML=`
+    <div class="sec-head"><div class="sec-title" style="color:var(--green)">✅ ${vazios.length} vaga(s) disponível(is) no período</div>
+    <button class="btn btn-ghost btn-sm" onclick="copiarDisp()">📋 Copiar</button></div>
+    <div id="disp-cards">
+    ${vazios.map(e=>`
+      <div class="disp-card">
+        <div class="disp-info">
+          <div class="disp-title">${placa(e.placa).nome}</div>
+          <div class="disp-sub">Bi-semana ${e.bs} · ${fmt(e.ini)} a ${fmt(e.fim)}</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="badge badge-green">Disponível</span>
+          <button class="btn btn-acc btn-sm" onclick="reservarVaga(${e.id})">Reservar</button>
+        </div>
+      </div>
+    `).join('')}
+    </div>
+  `;
+}
+
+function copiarDisp() {
+  const de = document.getElementById('disp-de').value;
+  const ate = document.getElementById('disp-ate').value;
+  const cards = document.querySelectorAll('#disp-cards .disp-card');
+  let txt = `🪧 *Disponibilidade de Outdoors*\n📅 Período: ${fmtFull(de)} a ${fmtFull(ate)}\n\n`;
+  cards.forEach(c=>{
+    const t=c.querySelector('.disp-title').textContent;
+    const s=c.querySelector('.disp-sub').textContent;
+    txt+=`✅ ${t}\n   ${s}\n\n`;
+  });
+  navigator.clipboard.writeText(txt).then(()=>alert('Copiado! Pronto para colar no WhatsApp.'));
+}
+
+function reservarVaga(id) {
+  const e = S.exibicoes.find(x=>x.id===id);
+  if(!e) return;
+  abrirEditar(id);
+}
+
+// ============ VENDAS ============
+function vendaTab(tab, el) {
+  document.getElementById('vt-lista').style.display = tab==='lista'?'block':'none';
+  document.getElementById('vt-nova').style.display = tab==='nova'?'block':'none';
+  document.querySelectorAll('.inner-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  if(tab==='nova') { populateSelects(); popularExibicoesSelect(); setDataHoje(); }
+}
+
+function setDataHoje() { const el=document.getElementById('v-data'); if(el&&!el.value) el.value=today(); }
+
+function popularExibicoesSelect() {
+  const sel = document.getElementById('v-exibicao');
+  sel.innerHTML = '<option value="">Selecione...</option>' +
+    S.exibicoes.map(e=>`<option value="${e.id}">[BS ${e.bs}] ${placa(e.placa).nome} · ${fmt(e.ini)}–${fmt(e.fim)} ${e.cli?'('+e.cli+')':'(vazio)'}</option>`).join('');
+}
+
+function calcDesconto() {
+  const tab=toNum(document.getElementById('v-tabela')?.value);
+  const ac=toNum(document.getElementById('v-acordado')?.value);
+  const info=document.getElementById('v-desconto-info');
+  if(!tab||!ac){info.textContent='Preencha os valores acima';return;}
+  const desc=((tab-ac)/tab*100).toFixed(1);
+  const economia=tab-ac;
+  info.innerHTML=`Valor tabela: <b>${R$(tab)}</b> · Acordado: <b>${R$(ac)}</b> · Desconto: <b style="color:var(--yellow)">${desc}%</b> (${R$(economia)} a menos)`;
+}
+
+function salvarVenda() {
+  const cli=document.getElementById('v-cliente').value;
+  const exId=parseInt(document.getElementById('v-exibicao').value);
+  const tab=toNum(document.getElementById('v-tabela').value);
+  const ac=toNum(document.getElementById('v-acordado').value);
+  const tipo=document.getElementById('v-tipo').value;
+  const data=document.getElementById('v-data').value;
+  const obs=document.getElementById('v-obs').value;
+  if(!cli||!exId){ alert('Selecione cliente e exibição'); return; }
+  S.vendas.push({id:S.nextId++,data,cli,exId,tabela:tab,acordado:ac,tipo,obs});
+  // atualizar exibição com cliente
+  const ex=S.exibicoes.find(e=>e.id===exId);
+  if(ex&&!ex.cli) ex.cli=cli;
+  save(); renderVendas();
+  vendaTab('lista',document.querySelectorAll('.inner-tab')[0]);
+}
+
+function renderVendas() {
+  const tbody=document.getElementById('vendas-tbody');
+  if(!S.vendas.length){ tbody.innerHTML='<tr class="empty-row"><td colspan="8">Nenhuma venda registrada</td></tr>'; return; }
+  const tipoLabel={normal:'Normal',desconto:'Desconto',permuta:'Permuta',bonificacao:'Bonificação',cortesia:'Cortesia'};
+  const tipoBadge={normal:'badge-blue',desconto:'badge-yellow',permuta:'badge-gray',bonificacao:'badge-green',cortesia:'badge-red'};
+  tbody.innerHTML=[...S.vendas].reverse().map(v=>{
+    const ex=S.exibicoes.find(e=>e.id===v.exId);
+    const desc=v.tabela?((v.tabela-v.acordado)/v.tabela*100).toFixed(0):'0';
+    return `<tr>
+      <td style="font-size:12px;color:var(--sub)">${fmtFull(v.data)}</td>
+      <td><b>${v.cli}</b></td>
+      <td style="font-size:12px">${ex?placa(ex.placa).nome:'—'}</td>
+      <td style="font-size:12px">${ex?'BS '+ex.bs:'—'}</td>
+      <td>${R$(v.acordado)}</td>
+      <td><span class="badge ${tipoBadge[v.tipo]||'badge-gray'}">${tipoLabel[v.tipo]||v.tipo}</span></td>
+      <td style="font-size:12px">${v.tabela&&v.acordado<v.tabela?`<span class="c-yellow">-${desc}%</span>`:'—'}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="excluirVenda(${v.id})">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function excluirVenda(id) {
+  if(!confirm('Excluir venda?')) return;
+  S.vendas=S.vendas.filter(v=>v.id!==id); save(); renderVendas();
+}
+
+// ============ CLIENTES ============
+function renderClientes() {
+  const busca=(document.getElementById('busca-cliente')?.value||'').toLowerCase();
+  let cls=S.clientes.filter(c=>c.nome.toLowerCase().includes(busca));
+  const div=document.getElementById('clientes-list');
+  if(!cls.length){ div.innerHTML='<div style="color:var(--faint);padding:32px;text-align:center">Nenhum cliente cadastrado</div>'; return; }
+  div.innerHTML=cls.map(c=>{
+    const exs=S.exibicoes.filter(e=>e.cli===c.nome).length;
+    const totalV=S.vendas.filter(v=>v.cli===c.nome).reduce((a,v)=>a+toNum(v.acordado),0);
+    return `<div class="cliente-card">
+      <div class="cliente-avatar">${c.nome.charAt(0)}</div>
+      <div class="cliente-info">
+        <div class="cliente-nome">${c.nome}</div>
+        <div class="cliente-meta">${c.contato||''}${c.contato&&c.tel?' · ':''}${c.tel||''}${c.seg?' · '+c.seg:''}</div>
+        ${c.obs?`<div style="font-size:11px;color:var(--faint);margin-top:4px">${c.obs}</div>`:''}
+      </div>
+      <div class="cliente-stats">
+        <div class="cstat"><strong>${exs}</strong>exibições</div>
+        <div class="cstat"><strong>${R$(totalV)}</strong>total</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost btn-sm" onclick="gerarRelClienteRapido('${c.nome}')">Relatório</button>
+        <button class="btn btn-ghost btn-sm" onclick="editarCliente(${c.id})">Editar</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function salvarCliente() {
+  const id=parseInt(document.getElementById('cli-id').value)||0;
+  const dados={
+    nome:document.getElementById('cli-nome').value.trim(),
+    contato:document.getElementById('cli-contato').value.trim(),
+    tel:document.getElementById('cli-tel').value.trim(),
+    email:document.getElementById('cli-email').value.trim(),
+    doc:document.getElementById('cli-doc').value.trim(),
+    seg:document.getElementById('cli-seg').value.trim(),
+    obs:document.getElementById('cli-obs').value.trim(),
+  };
+  if(!dados.nome){ alert('Nome obrigatório'); return; }
+  if(id) { const idx=S.clientes.findIndex(c=>c.id===id); if(idx>-1) S.clientes[idx]={...S.clientes[idx],...dados}; }
+  else S.clientes.push({id:S.nextId++,...dados});
+  save(); renderClientes(); closeModal('m-cliente');
+  ['cli-id','cli-nome','cli-contato','cli-tel','cli-email','cli-doc','cli-seg','cli-obs'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+}
+
+function editarCliente(id) {
+  const c=S.clientes.find(x=>x.id===id); if(!c) return;
+  document.getElementById('cli-id').value=c.id;
+  document.getElementById('cli-nome').value=c.nome;
+  document.getElementById('cli-contato').value=c.contato;
+  document.getElementById('cli-tel').value=c.tel;
+  document.getElementById('cli-email').value=c.email;
+  document.getElementById('cli-doc').value=c.doc;
+  document.getElementById('cli-seg').value=c.seg;
+  document.getElementById('cli-obs').value=c.obs;
+  document.getElementById('m-cli-title').textContent='Editar Cliente';
+  openModal('m-cliente');
+}
+
+// ============ RELATÓRIOS ============
+function renderRelSelects() {
+  const sel=document.getElementById('rel-cliente');
+  sel.innerHTML='<option value="">Escolha...</option>'+S.clientes.map(c=>`<option>${c.nome}</option>`).join('');
+}
+
+function abrirRelCliente() {
+  const cli=document.getElementById('rel-cliente').value;
+  if(!cli){ alert('Selecione um cliente'); return; }
+  gerarRelClienteRapido(cli);
+}
+
+function gerarRelClienteRapido(cli) {
+  const exs=S.exibicoes.filter(e=>e.cli===cli).sort((a,b)=>a.bs-b.bs);
+  const vendas=S.vendas.filter(v=>v.cli===cli);
+  const totalAcordado=vendas.reduce((a,v)=>a+toNum(v.acordado),0);
+  const totalTab=vendas.reduce((a,v)=>a+toNum(v.tabela),0);
+  const hoje=new Date().toLocaleDateString('pt-BR');
+  const rows=exs.map(e=>{
+    const v=vendas.find(vv=>vv.exId===e.id);
+    return `<tr style="border-bottom:1px solid #eee">
+      <td style="padding:9px 14px">Bi-semana ${e.bs}</td>
+      <td style="padding:9px 14px">${fmt(e.ini)} a ${fmt(e.fim)}</td>
+      <td style="padding:9px 14px">${placa(e.placa).nome}</td>
+      <td style="padding:9px 14px">${e.prazo?fmt(e.prazo):'—'}</td>
+      <td style="padding:9px 14px">${v?R$(v.acordado):'—'}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('rel-modal-title').textContent=`Relatório — ${cli}`;
+  document.getElementById('rel-body').innerHTML=`
+    <div style="background:var(--acc);color:#000;padding:18px 20px;border-radius:10px;margin-bottom:20px">
+      <div style="font-family:'Lato',Arial,sans-serif;font-size:20px;font-weight:800">${cli}</div>
+      <div style="font-size:12px;margin-top:3px;opacity:.7">Programação de Outdoor · Gerado em ${hoje}</div>
+    </div>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
+      <thead><tr style="background:var(--s2)">
+        <th style="padding:9px 14px;text-align:left;font-size:10px;color:var(--faint);text-transform:uppercase">Período</th>
+        <th style="padding:9px 14px;text-align:left;font-size:10px;color:var(--faint);text-transform:uppercase">Datas</th>
+        <th style="padding:9px 14px;text-align:left;font-size:10px;color:var(--faint);text-transform:uppercase">Localização</th>
+        <th style="padding:9px 14px;text-align:left;font-size:10px;color:var(--faint);text-transform:uppercase">Prazo Arte</th>
+        <th style="padding:9px 14px;text-align:left;font-size:10px;color:var(--faint);text-transform:uppercase">Valor</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div style="display:flex;gap:20px;flex-wrap:wrap">
+      <div style="background:var(--s2);border-radius:8px;padding:12px 18px;flex:1">
+        <div style="font-size:10px;color:var(--faint);margin-bottom:4px">TOTAL INSERÇÕES</div>
+        <div style="font-family:'Lato',Arial,sans-serif;font-size:22px;font-weight:700;color:var(--acc)">${exs.length}</div>
+      </div>
+      ${totalAcordado?`<div style="background:var(--s2);border-radius:8px;padding:12px 18px;flex:1">
+        <div style="font-size:10px;color:var(--faint);margin-bottom:4px">TOTAL ACORDADO</div>
+        <div style="font-family:'Lato',Arial,sans-serif;font-size:22px;font-weight:700;color:var(--green)">${R$(totalAcordado)}</div>
+      </div>`:''}
+    </div>
+  `;
+  // para print
+  document.getElementById('print-area').innerHTML = document.getElementById('rel-body').innerHTML;
+  openModal('m-relatorio');
+}
+
+function abrirRelOcupacao() {
+  const m1=parseInt(document.getElementById('rel-mes1').value);
+  const m2=parseInt(document.getElementById('rel-mes2').value);
+  const meses=['','Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  let rows='';
+  for(let m=m1;m<=m2;m++){
+    const exs=S.exibicoes.filter(e=>mesDeData(e.ini)==m||mesDeData(e.fim)==m);
+    const oc=exs.filter(e=>e.cli).length;
+    const vaz=exs.length-oc;
+    const pct=exs.length?Math.round(oc/exs.length*100):0;
+    const receita=S.vendas.filter(v=>{
+      const ex=S.exibicoes.find(e=>e.id===v.exId);
+      return ex&&(mesDeData(ex.ini)==m||mesDeData(ex.fim)==m);
+    }).reduce((a,v)=>a+toNum(v.acordado),0);
+    rows+=`<tr style="border-bottom:1px solid #333">
+      <td style="padding:10px 14px;font-weight:600">${meses[m]}</td>
+      <td style="padding:10px 14px">${exs.length}</td>
+      <td style="padding:10px 14px;color:var(--green)">${oc}</td>
+      <td style="padding:10px 14px;color:var(--red)">${vaz}</td>
+      <td style="padding:10px 14px"><span style="color:${pct>=70?'var(--green)':pct>=40?'var(--yellow)':'var(--red)'}">${pct}%</span></td>
+      <td style="padding:10px 14px">${receita?R$(receita):'—'}</td>
+    </tr>`;
+  }
+  document.getElementById('rel-modal-title').textContent='Relatório de Ocupação';
+  document.getElementById('rel-body').innerHTML=`
+    <table style="width:100%;border-collapse:collapse">
+      <thead><tr style="background:var(--s2)">
+        <th style="padding:10px 14px;text-align:left;font-size:10px;color:var(--faint);text-transform:uppercase">Mês</th>
+        <th style="padding:10px 14px;text-align:left;font-size:10px;color:var(--faint);text-transform:uppercase">Total</th>
+        <th style="padding:10px 14px;text-align:left;font-size:10px;color:var(--faint);text-transform:uppercase">Ocupadas</th>
+        <th style="padding:10px 14px;text-align:left;font-size:10px;color:var(--faint);text-transform:uppercase">Vazias</th>
+        <th style="padding:10px 14px;text-align:left;font-size:10px;color:var(--faint);text-transform:uppercase">Ocupação %</th>
+        <th style="padding:10px 14px;text-align:left;font-size:10px;color:var(--faint);text-transform:uppercase">Receita</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+  openModal('m-relatorio');
+}
+
+function copiarRel() {
+  const cli=document.getElementById('rel-modal-title').textContent.replace('Relatório — ','');
+  const exs=S.exibicoes.filter(e=>e.cli===cli).sort((a,b)=>a.bs-b.bs);
+  let txt=`🪧 *${cli} — Programação de Outdoor*\n\n`;
+  exs.forEach(e=>{
+    txt+=`📍 ${placa(e.placa).nome}\n`;
+    txt+=`   📅 ${fmt(e.ini)} a ${fmt(e.fim)} · Bi-semana ${e.bs}\n`;
+    if(e.prazo) txt+=`   ⏰ Prazo arte: ${fmt(e.prazo)}\n`;
+    txt+='\n';
+  });
+  txt+=`Total: ${exs.length} inserção(ões)`;
+  navigator.clipboard.writeText(txt).then(()=>alert('Copiado! Pronto para WhatsApp.'));
+}
+
+// ============ ALERTAS ============
+function renderAlertas() {
+  const alertas=S.exibicoes
+    .filter(e=>e.prazo&&diasAte(e.prazo)>=-3&&diasAte(e.prazo)<=10)
+    .sort((a,b)=>diasAte(a.prazo)-diasAte(b.prazo));
+  const badge=document.getElementById('nb-alertas');
+  const urg=alertas.filter(e=>diasAte(e.prazo)>=0&&diasAte(e.prazo)<=5).length;
+  badge.textContent=urg||'';
+  const div=document.getElementById('alertas-list');
+  if(!alertas.length){
+    div.innerHTML='<div style="text-align:center;padding:60px;color:var(--faint)"><div style="font-size:36px;margin-bottom:12px">✅</div><div>Sem alertas no momento</div></div>';
+    return;
+  }
+  div.innerHTML=alertas.map(e=>{
+    const d=diasAte(e.prazo);
+    const crit=d<=1;
+    const icon=d<0?'🚨':d<=1?'⚠️':d<=5?'📅':'🕐';
+    const label=d<0?`Prazo vencido há ${Math.abs(d)} dia(s)`:`${d===0?'Prazo HOJE':'Prazo em '+d+' dias'} · ${fmt(e.prazo)}`;
+    return `<div class="alerta-item ${crit?'crit':'warn'}">
+      <div class="alerta-icon">${icon}</div>
+      <div class="alerta-body">
+        <strong>${e.cli||'VAZIO'} — ${placa(e.placa).nome}</strong>
+        <span>Bi-semana ${e.bs} · ${fmt(e.ini)} a ${fmt(e.fim)} · ${label}</span>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="abrirEditar(${e.id})">Ver</button>
+    </div>`;
+  }).join('');
+}
+
+// ============ PLACAS ============
+function renderPlacas() {
+  const tbody=document.getElementById('placas-tbody');
+  tbody.innerHTML=S.placas.map((p,i)=>{
+    const exs=S.exibicoes.filter(e=>e.placa===p.id);
+    const oc=exs.filter(e=>e.cli).length;
+    const pct=exs.length?Math.round(oc/exs.length*100):0;
+    return `<tr>
+      <td style="font-family:'Lato',Arial,sans-serif;font-weight:700;color:var(--acc)">${i+1}</td>
+      <td><b>${p.nome}</b></td>
+      <td style="font-size:12px;color:var(--sub)">${p.local||'—'}</td>
+      <td>${exs.length}</td>
+      <td><span style="color:${pct>=70?'var(--green)':pct>=40?'var(--yellow)':'var(--red)'}">${pct}%</span></td>
+      <td><button class="btn btn-ghost btn-sm" onclick="excluirPlaca(${p.id})">Excluir</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function salvarPlaca() {
+  const nome=document.getElementById('np-nome').value.trim();
+  const local=document.getElementById('np-local').value.trim();
+  const valor=toNum(document.getElementById('np-valor').value);
+  if(!nome){ alert('Nome obrigatório'); return; }
+  S.placas.push({id:S.nextId++,nome,local,valor});
+  save(); renderPlacas(); closeModal('m-placa');
+  ['np-nome','np-local','np-valor'].forEach(id=>document.getElementById(id).value='');
+}
+
+function excluirPlaca(id) {
+  if(!confirm('Excluir placa? As exibições vinculadas perderão a referência.')) return;
+  S.placas=S.placas.filter(p=>p.id!==id); save(); renderPlacas();
+}
+
+// ============ EXIBIÇÕES CRUD ============
+function salvarExibicao() {
+  const bs=parseInt(document.getElementById('ne-bs').value);
+  const pl=parseInt(document.getElementById('ne-placa').value);
+  let ini=document.getElementById('ne-ini').value;
+  let fim=document.getElementById('ne-fim').value;
+  // auto-fill dates from official calendar
+  if(bs && BISEMANAS_2026[bs] && !ini) ini=BISEMANAS_2026[bs].ini;
+  if(bs && BISEMANAS_2026[bs] && !fim) fim=BISEMANAS_2026[bs].fim;
+  if(!bs||!pl||!ini||!fim){ alert('Preencha os campos obrigatórios'); return; }
+  S.exibicoes.push({id:S.nextId++,bs,placa:pl,ini,fim,
+    cli:document.getElementById('ne-cli').value.trim(),
+    prazo:document.getElementById('ne-prazo').value,
+    obs:document.getElementById('ne-obs').value.trim()});
+  save(); renderDash(); closeModal('m-exibicao');
+  ['ne-bs','ne-ini','ne-fim','ne-cli','ne-prazo','ne-obs'].forEach(id=>document.getElementById(id).value='');
+}
+
+function autoFillBsDates(bs) {
+  bs = parseInt(bs);
+  const d = BISEMANAS_2026[bs];
+  if(!d) return;
+  const ini=document.getElementById('ne-ini');
+  const fim=document.getElementById('ne-fim');
+  if(ini&&!ini.value) ini.value=d.ini;
+  if(fim&&!fim.value) fim.value=d.fim;
+}
+
+function abrirEditar(id) {
+  const e=S.exibicoes.find(x=>x.id===id); if(!e) return;
+  populateSelects();
+  document.getElementById('ed-id').value=e.id;
+  document.getElementById('ed-bs').value=e.bs;
+  document.getElementById('ed-placa').value=e.placa;
+  document.getElementById('ed-ini').value=e.ini;
+  document.getElementById('ed-fim').value=e.fim;
+  document.getElementById('ed-cli').value=e.cli||'';
+  document.getElementById('ed-prazo').value=e.prazo||'';
+  document.getElementById('ed-obs').value=e.obs||'';
+  openModal('m-editar');
+}
+
+function updateEx() {
+  const id=parseInt(document.getElementById('ed-id').value);
+  const idx=S.exibicoes.findIndex(x=>x.id===id); if(idx<0) return;
+  S.exibicoes[idx]={id,bs:parseInt(document.getElementById('ed-bs').value),
+    placa:parseInt(document.getElementById('ed-placa').value),
+    ini:document.getElementById('ed-ini').value,
+    fim:document.getElementById('ed-fim').value,
+    cli:document.getElementById('ed-cli').value.trim(),
+    prazo:document.getElementById('ed-prazo').value,
+    obs:document.getElementById('ed-obs').value.trim()};
+  save(); renderDash(); closeModal('m-editar');
+}
+
+function excluirEx() {
+  if(!confirm('Excluir exibição?')) return;
+  const id=parseInt(document.getElementById('ed-id').value);
+  S.exibicoes=S.exibicoes.filter(x=>x.id!==id);
+  save(); renderDash(); closeModal('m-editar');
+}
+
+// ============ MODALS ============
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('open'); }));
+
+// ============ MAPA DE PLACAS ============
+let mapaSelected = new Set(); // Set of exibicao IDs
+let mapaAcaoAtual = '';
+
+function renderMapa() {
+  mapaSelected.clear();
+  atualizarToolbarSel();
+  const ano = parseInt(document.getElementById('mapa-ano')?.value || 2026);
+  const mes = document.getElementById('mapa-mes')?.value || '';
+
+  // gather all bi-semanas that overlap with filter
+  let exs = S.exibicoes.filter(e => {
+    const y = e.ini ? parseInt(e.ini.split('-')[0]) : 0;
+    if(y !== ano) return false;
+    if(mes && mesDeData(e.ini) != mes && mesDeData(e.fim) != mes) return false;
+    return true;
+  });
+
+  const bsList = [...new Set(exs.map(e=>e.bs))].sort((a,b)=>a-b);
+  const grid = document.getElementById('mapa-grid');
+  if(!bsList.length){
+    grid.innerHTML='<div style="color:var(--faint);padding:40px;text-align:center">Nenhuma exibição neste período.</div>';
+    return;
+  }
+
+  // Header row
+  let html = '<div class="mapa-wrap"><table class="mapa-table"><thead><tr>';
+  html += `<th class="mapa-th-bs">Bi-semana</th>`;
+  S.placas.forEach(p => {
+    html += `<th class="mapa-th-placa">${p.nome}</th>`;
+  });
+  html += '</tr></thead><tbody>';
+
+  // Data rows
+  bsList.forEach(bs => {
+    // get period from any exibicao with this bs
+    const sample = exs.find(e=>e.bs===bs);
+    const periodo = sample ? `${fmt(sample.ini)}–${fmt(sample.fim)}` : '';
+    html += `<tr>`;
+    html += `<td class="mapa-bs-cell"><div class="mapa-bs-num">${bs}</div><div class="mapa-bs-per">${periodo}</div></td>`;
+
+    S.placas.forEach(p => {
+      const ex = exs.find(e=>e.bs===bs && e.placa===p.id);
+      if(!ex){
+        html += `<td class="mapa-cell" style="opacity:.3"><div class="mapa-cell-inner" style="background:var(--s3);border:1px dashed var(--border)"><div class="mapa-datas" style="text-align:center;color:var(--faint)">—</div></div></td>`;
+        return;
+      }
+      const vazio = !ex.cli;
+      const urg = ex.prazo && diasAte(ex.prazo)>=0 && diasAte(ex.prazo)<=5;
+      let tipo = vazio ? 'vazio' : urg ? 'urgente' : 'ocupado';
+      const prazoTxt = urg ? `⏰ ${diasAte(ex.prazo)}d` : '';
+      html += `<td class="mapa-cell ${tipo}" id="mc-${ex.id}" onclick="mapaToggle(${ex.id},this)">
+        <div class="mapa-cell-inner">
+          <div class="mapa-nome ${vazio?'vazio':''}">${ex.cli || 'VAZIO'}</div>
+          <div class="mapa-datas">${fmt(ex.ini)} – ${fmt(ex.fim)}</div>
+          ${prazoTxt?`<div class="mapa-prazo">${prazoTxt}</div>`:''}
+        </div>
+      </td>`;
+    });
+    html += `</tr>`;
+  });
+
+  html += '</tbody></table></div>';
+  grid.innerHTML = html;
+}
+
+function mapaToggle(exId, el) {
+  if(mapaSelected.has(exId)){
+    mapaSelected.delete(exId);
+    el.classList.remove('selected');
+  } else {
+    mapaSelected.add(exId);
+    el.classList.add('selected');
+  }
+  atualizarToolbarSel();
+}
+
+function atualizarToolbarSel() {
+  const bar = document.getElementById('mapa-toolbar-sel');
+  const count = document.getElementById('mapa-sel-count');
+  if(!bar) return;
+  if(mapaSelected.size > 0){
+    bar.style.display='flex';
+    count.textContent = `${mapaSelected.size} selecionada(s)`;
+  } else {
+    bar.style.display='none';
+  }
+}
+
+function mapaClearSel() {
+  mapaSelected.forEach(id => {
+    const el=document.getElementById('mc-'+id);
+    if(el) el.classList.remove('selected');
+  });
+  mapaSelected.clear();
+  atualizarToolbarSel();
+}
+
+function mapaAcao(tipo) {
+  if(!mapaSelected.size) return;
+  mapaAcaoAtual = tipo;
+  const exs = [...mapaSelected].map(id=>S.exibicoes.find(e=>e.id===id)).filter(Boolean);
+  const titulos = {reservar:'Reservar Exibições',liberar:'Liberar Exibições',mudar:'Mudar Cliente'};
+  document.getElementById('m-mapa-titulo').textContent = titulos[tipo];
+
+  let body = `<div style="margin-bottom:16px;background:var(--s2);border-radius:8px;padding:12px;max-height:180px;overflow-y:auto;">`;
+  exs.forEach(e=>{
+    body+=`<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px">
+      <span style="font-weight:700;min-width:32px;color:var(--acc)">BS${e.bs}</span>
+      <span style="flex:1;color:var(--sub)">${placa(e.placa).nome}</span>
+      <span class="badge ${e.cli?'badge-green':'badge-red'}">${e.cli||'VAZIO'}</span>
+    </div>`;
+  });
+  body += '</div>';
+
+  if(tipo==='reservar'||tipo==='mudar'){
+    body += `<div class="form-group">
+      <label class="form-label">Cliente *</label>
+      <input class="form-input" id="mapa-novo-cli" placeholder="Nome do cliente" list="list-clientes3">
+      <datalist id="list-clientes3">${S.clientes.map(c=>`<option value="${c.nome}">`).join('')}</datalist>
+    </div>
+    <div class="form-group" style="margin-top:12px">
+      <label class="form-label">Prazo envio arte</label>
+      <input class="form-input" type="date" id="mapa-novo-prazo">
+    </div>`;
+  } else {
+    body += `<p style="font-size:13px;color:var(--sub)">As ${exs.length} exibição(ões) selecionadas serão marcadas como <b style="color:var(--red)">VAZIAS / disponíveis</b>.</p>`;
+  }
+
+  document.getElementById('m-mapa-body').innerHTML = body;
+  openModal('m-mapa-acao');
+}
+
+function mapaConfirmar() {
+  const exIds = [...mapaSelected];
+  if(mapaAcaoAtual==='liberar'){
+    exIds.forEach(id=>{
+      const e=S.exibicoes.find(x=>x.id===id); if(e){ e.cli=''; e.prazo=''; }
+    });
+  } else {
+    const cli=document.getElementById('mapa-novo-cli')?.value.trim();
+    const prazo=document.getElementById('mapa-novo-prazo')?.value||'';
+    if(!cli){ alert('Informe o cliente'); return; }
+    exIds.forEach(id=>{
+      const e=S.exibicoes.find(x=>x.id===id); if(e){ e.cli=cli; e.prazo=prazo; }
+    });
+  }
+  save();
+  closeModal('m-mapa-acao');
+  mapaClearSel();
+  renderMapa();
+}
+
+// ============ LEADS ============
+const leadStatusLabel = {novo:'Novo',negociacao:'Em negociação',fechado:'Fechado',perdido:'Perdido'};
+const leadStatusBadge = {novo:'badge-novo',negociacao:'badge-negociacao',fechado:'badge-fechado',perdido:'badge-perdido'};
+
+function renderLeads() {
+  if(!S.leads) S.leads=[];
+  const filtro = document.getElementById('f-lead-status')?.value||'';
+  let leads = [...S.leads].sort((a,b)=>new Date(b.data)-new Date(a.data));
+  if(filtro) leads=leads.filter(l=>l.status===filtro);
+
+  // badge nav
+  const abertos = S.leads.filter(l=>l.status==='novo'||l.status==='negociacao').length;
+  const nb = document.getElementById('nb-leads');
+  if(nb) nb.textContent = abertos||'';
+
+  const tbody=document.getElementById('leads-tbody');
+  if(!leads.length){tbody.innerHTML='<tr class="empty-row"><td colspan="9">Nenhum lead cadastrado</td></tr>';return;}
+  tbody.innerHTML=leads.map(l=>{
+    const placasNomes=(l.placas||[]).map(pid=>{ const p=S.placas.find(x=>x.id==pid); return p?p.nome.split(' ').slice(0,2).join(' '):'?'; }).join(', ')||'—';
+    const bs=(l.bisemanas||[]).join(', ')||'—';
+    return `<tr>
+      <td><b>${l.empresa}</b></td>
+      <td style="font-size:12px;color:var(--sub)">${l.contato||'—'}</td>
+      <td style="font-size:12px">${placasNomes}</td>
+      <td style="font-size:12px">${bs}</td>
+      <td>${l.orcamento?R$(l.orcamento):'—'}</td>
+      <td style="font-size:12px;color:var(--sub)">${l.responsavel||'—'}</td>
+      <td style="font-size:12px;color:var(--sub)">${fmtFull(l.data)}</td>
+      <td><span class="badge ${leadStatusBadge[l.status]||'badge-gray'}">${leadStatusLabel[l.status]||l.status}</span></td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-ghost btn-sm" onclick="editarLead(${l.id})">Editar</button>
+        ${l.status!=='fechado'?`<button class="btn btn-acc btn-sm" onclick="converterLeadVendaDireto(${l.id})">💰</button>`:''}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function leadsTab(tab, el) {
+  document.getElementById('lt-lista').style.display=tab==='lista'?'block':'none';
+  document.getElementById('lt-novo').style.display=tab==='novo'?'block':'none';
+  document.querySelectorAll('#page-leads .inner-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  if(tab==='novo') { popularPlacasCheck(); if(!document.getElementById('ld-data').value) document.getElementById('ld-data').value=today(); }
+}
+
+function popularPlacasCheck() {
+  const div=document.getElementById('ld-placas-check'); if(!div) return;
+  div.innerHTML=S.placas.map(p=>`
+    <label class="check-placa">
+      <input type="checkbox" value="${p.id}" class="ld-placa-cb"> ${p.nome}
+    </label>`).join('');
+}
+
+function getPlacasSelecionadas() {
+  return [...document.querySelectorAll('.ld-placa-cb:checked')].map(el=>parseInt(el.value));
+}
+
+function setPlacasSelecionadas(ids) {
+  document.querySelectorAll('.ld-placa-cb').forEach(cb=>{ cb.checked=ids.includes(parseInt(cb.value)); });
+}
+
+function salvarLead() {
+  if(!S.leads) S.leads=[];
+  const id=parseInt(document.getElementById('ld-id').value)||0;
+  const empresa=document.getElementById('ld-empresa').value.trim();
+  if(!empresa){alert('Informe a empresa');return;}
+  const bsRaw=document.getElementById('ld-bisemanas').value;
+  const bisemanas=bsRaw.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n));
+  const dados={
+    empresa,
+    contato:document.getElementById('ld-contato').value.trim(),
+    responsavel:document.getElementById('ld-resp').value.trim(),
+    data:document.getElementById('ld-data').value||today(),
+    placas:getPlacasSelecionadas(),
+    bisemanas,
+    orcamento:parseFloat(document.getElementById('ld-orcamento').value)||0,
+    status:document.getElementById('ld-status').value,
+    obs:document.getElementById('ld-obs').value.trim(),
+  };
+  if(id){ const idx=S.leads.findIndex(l=>l.id===id); if(idx>-1) S.leads[idx]={id,...dados}; }
+  else S.leads.push({id:S.nextId++,...dados});
+  save(); renderLeads();
+  leadsTab('lista',document.querySelectorAll('#page-leads .inner-tab')[0]);
+  limparFormLead();
+}
+
+function limparFormLead() {
+  ['ld-id','ld-empresa','ld-contato','ld-resp','ld-bisemanas','ld-orcamento','ld-obs'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('ld-status').value='novo';
+  document.getElementById('ld-data').value=today();
+  document.getElementById('ld-btn-venda').style.display='none';
+  document.getElementById('ld-btn-del').style.display='none';
+  document.querySelectorAll('.ld-placa-cb').forEach(cb=>cb.checked=false);
+}
+
+function editarLead(id) {
+  const l=S.leads.find(x=>x.id===id); if(!l) return;
+  popularPlacasCheck();
+  document.getElementById('ld-id').value=l.id;
+  document.getElementById('ld-empresa').value=l.empresa;
+  document.getElementById('ld-contato').value=l.contato||'';
+  document.getElementById('ld-resp').value=l.responsavel||'';
+  document.getElementById('ld-data').value=l.data||today();
+  document.getElementById('ld-bisemanas').value=(l.bisemanas||[]).join(', ');
+  document.getElementById('ld-orcamento').value=l.orcamento||'';
+  document.getElementById('ld-status').value=l.status||'novo';
+  document.getElementById('ld-obs').value=l.obs||'';
+  setTimeout(()=>setPlacasSelecionadas(l.placas||[]),50);
+  document.getElementById('ld-btn-venda').style.display='inline-flex';
+  document.getElementById('ld-btn-del').style.display='inline-flex';
+  leadsTab('novo',document.querySelectorAll('#page-leads .inner-tab')[1]);
+}
+
+function excluirLead() {
+  const id=parseInt(document.getElementById('ld-id').value); if(!id) return;
+  if(!confirm('Excluir lead?')) return;
+  S.leads=S.leads.filter(l=>l.id!==id); save(); renderLeads();
+  leadsTab('lista',document.querySelectorAll('#page-leads .inner-tab')[0]);
+  limparFormLead();
+}
+
+function converterLeadVenda() {
+  const id=parseInt(document.getElementById('ld-id').value); if(!id) return;
+  converterLeadVendaDireto(id);
+}
+
+function converterLeadVendaDireto(id) {
+  const l=S.leads.find(x=>x.id===id); if(!l) return;
+  // marca como fechado
+  l.status='fechado'; save();
+  // vai para aba vendas com dados pré-preenchidos
+  navTo('vendas',document.querySelector('.nav-item[onclick*="vendas"]'));
+  setTimeout(()=>{
+    vendaTab('nova',document.querySelectorAll('.inner-tab')[1]);
+    setTimeout(()=>{
+      const vc=document.getElementById('v-cliente');
+      if(vc){ // tenta achar o cliente pelo nome
+        [...vc.options].forEach(o=>{ if(o.text===l.empresa) vc.value=o.value; });
+      }
+      if(l.orcamento) document.getElementById('v-acordado').value=l.orcamento;
+      document.getElementById('v-obs').value=`Lead convertido. ${l.obs||''}`.trim();
+      calcDesconto();
+    },100);
+  },100);
+}
+
+
+if(!S.leads) S.leads=[];
+populateSelects();
+renderDash();
+renderAlertas();
+updateLeadsBadge();
+// Load fresh data from Sheets on startup
+loadFromSheets();
+
+function updateLeadsBadge() {
+  const _nb=document.getElementById('nb-leads');
+  if(_nb){ const ab=(S.leads||[]).filter(l=>l.status==='novo'||l.status==='negociacao').length; _nb.textContent=ab||''; }
+}
+</script>
+</body>
+</html>
