@@ -232,6 +232,31 @@ textarea.form-input{resize:vertical;min-height:80px;}
 .mapa-bs-num{font-family:'Lato',Arial,sans-serif;font-size:13px;font-weight:900;color:#fff;}
 .mapa-bs-per{font-size:9px;color:#5a7d99;margin-top:2px;}
 
+
+/* ===== FINANCEIRO ===== */
+.fin-card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+.fin-section{margin-bottom:28px;}
+.fin-section-title{font-family:'Lato',Arial,sans-serif;font-size:14px;font-weight:700;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.fluxo-bar-wrap{display:flex;gap:3px;align-items:flex-end;height:120px;margin:16px 0;}
+.fluxo-bar-col{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;}
+.fluxo-bar{width:100%;border-radius:4px 4px 0 0;min-height:4px;transition:height .3s;}
+.fluxo-bar.entrada{background:#16a34a;}
+.fluxo-bar.saida{background:#dc2626;}
+.fluxo-bar-label{font-size:9px;color:var(--faint);text-align:center;white-space:nowrap;}
+.fluxo-saldo{font-size:10px;font-weight:700;text-align:center;}
+.prev-track{height:8px;border-radius:4px;background:var(--s3);overflow:hidden;margin:6px 0;}
+.prev-fill{height:100%;border-radius:4px;transition:width .4s;}
+.tag-tipo{display:inline-flex;align-items:center;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;}
+.tag-entrada{background:#dcfce7;color:#16a34a;border:1px solid #86efac;}
+.tag-saida{background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;}
+.tag-prevista{background:#fffbeb;color:#d97706;border:1px solid #fcd34d;}
+.tag-atrasada{background:#fff1f2;color:#e11d48;border:1px solid #fda4af;}
+.tag-paga{background:#f0fdf4;color:#16a34a;border:1px solid #86efac;}
+.semaforo{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:4px;}
+.sem-green{background:#16a34a;}
+.sem-yellow{background:#d97706;}
+.sem-red{background:#dc2626;}
+
 @media(max-width:768px){
   .sidebar{width:100%;height:auto;position:relative;flex-direction:row;flex-wrap:wrap;}
   .content{margin-left:0;}
@@ -260,6 +285,12 @@ textarea.form-input{resize:vertical;min-height:80px;}
     <div class="nav-item" onclick="navTo('relatorio',this)"><span class="nav-icon">📄</span> Relatórios</div>
     <div class="nav-item" onclick="navTo('alertas',this)"><span class="nav-icon">🔔</span> Alertas <span class="nav-badge" id="nb-alertas"></span></div>
     <div class="nav-item" onclick="navTo('placas',this)"><span class="nav-icon">🪧</span> Placas</div>
+    <div style="height:1px;background:rgba(255,255,255,.08);margin:8px 12px"></div>
+    <div style="font-size:9px;color:#3a5a72;text-transform:uppercase;letter-spacing:1.5px;padding:4px 12px;font-weight:700">Financeiro</div>
+    <div class="nav-item" onclick="navTo('fluxo',this)"><span class="nav-icon">💹</span> Fluxo de Caixa</div>
+    <div class="nav-item" onclick="navTo('receber',this)"><span class="nav-icon">📥</span> A Receber <span class="nav-badge" id="nb-receber"></span></div>
+    <div class="nav-item" onclick="navTo('pagar',this)"><span class="nav-icon">📤</span> A Pagar <span class="nav-badge" id="nb-pagar"></span></div>
+    <div class="nav-item" onclick="navTo('dre',this)"><span class="nav-icon">📊</span> DRE / Previsão</div>
   </div>
   <div class="sidebar-bottom">
     <button class="btn-new" onclick="openModal('m-exibicao')">+ Nova Exibição</button>
@@ -654,8 +685,232 @@ textarea.form-input{resize:vertical;min-height:80px;}
   </div>
 </div>
 
+
+<!-- ===== FLUXO DE CAIXA ===== -->
+<div class="page" id="page-fluxo">
+  <div class="stats" id="fluxo-stats"></div>
+  <div class="filters">
+    <div class="filter-group">
+      <div class="filter-label">Ano</div>
+      <select class="fi" id="fluxo-ano" onchange="renderFluxo()">
+        <option value="2026">2026</option><option value="2025">2025</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <div class="filter-label">Visualização</div>
+      <select class="fi" id="fluxo-view" onchange="renderFluxo()">
+        <option value="mes">Por Mês</option>
+        <option value="bs">Por Bi-semana</option>
+      </select>
+    </div>
+    <button class="btn btn-acc btn-sm" onclick="openModal('m-lancamento')">+ Lançamento</button>
+  </div>
+
+  <!-- gráfico de barras -->
+  <div class="fin-card fin-section">
+    <div class="fin-section-title">📈 Entradas vs Saídas</div>
+    <div class="fluxo-bar-wrap" id="fluxo-chart"></div>
+  </div>
+
+  <!-- tabela detalhada -->
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Tipo</th><th>Forma</th><th>Valor</th><th>Status</th><th></th></tr></thead>
+      <tbody id="fluxo-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== A RECEBER ===== -->
+<div class="page" id="page-receber">
+  <div class="stats" id="receber-stats"></div>
+  <div class="filters">
+    <div class="filter-group">
+      <div class="filter-label">Status</div>
+      <select class="fi" id="f-receber-status" onchange="renderReceber()">
+        <option value="">Todos</option>
+        <option value="pendente">Pendente</option>
+        <option value="atrasado">Atrasado</option>
+        <option value="pago">Pago</option>
+      </select>
+    </div>
+    <button class="btn btn-acc btn-sm" onclick="abrirLancamento('entrada')">+ Nova Entrada</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Vencimento</th><th>Cliente</th><th>Descrição</th><th>Parcela</th><th>Forma</th><th>Valor</th><th>Status</th><th></th></tr></thead>
+      <tbody id="receber-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== A PAGAR ===== -->
+<div class="page" id="page-pagar">
+  <div class="stats" id="pagar-stats"></div>
+  <div class="filters">
+    <div class="filter-group">
+      <div class="filter-label">Fornecedor</div>
+      <select class="fi" id="f-pagar-forn" onchange="renderPagar()">
+        <option value="">Todos</option>
+        <option value="Gráfica">Gráfica</option>
+        <option value="Contador">Contador</option>
+        <option value="Aplicador">Aplicador</option>
+        <option value="Manutenção">Manutenção</option>
+        <option value="Energia">Energia</option>
+        <option value="Outro">Outro</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <div class="filter-label">Status</div>
+      <select class="fi" id="f-pagar-status" onchange="renderPagar()">
+        <option value="">Todos</option>
+        <option value="pendente">Pendente</option>
+        <option value="atrasado">Atrasado</option>
+        <option value="pago">Pago</option>
+      </select>
+    </div>
+    <button class="btn btn-acc btn-sm" onclick="abrirLancamento('saida')">+ Nova Saída</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Vencimento</th><th>Fornecedor</th><th>Descrição</th><th>Forma</th><th>Valor</th><th>Status</th><th></th></tr></thead>
+      <tbody id="pagar-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== DRE / PREVISÃO ===== -->
+<div class="page" id="page-dre">
+  <div class="filters">
+    <div class="filter-group">
+      <div class="filter-label">Ano</div>
+      <select class="fi" id="dre-ano" onchange="renderDRE()">
+        <option value="2026">2026</option><option value="2025">2025</option>
+      </select>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
+    <!-- DRE -->
+    <div class="fin-card">
+      <div class="fin-section-title">📋 DRE Simplificado</div>
+      <div id="dre-body"></div>
+    </div>
+    <!-- Previsão -->
+    <div class="fin-card">
+      <div class="fin-section-title">🔮 Previsão por Mês</div>
+      <div id="prev-body"></div>
+    </div>
+  </div>
+
+  <!-- Cenários -->
+  <div class="fin-card">
+    <div class="fin-section-title">📊 Cenário Otimista vs Pessimista</div>
+    <div id="cenario-body"></div>
+  </div>
+</div>
+
 </div><!-- end content -->
 </div><!-- end app -->
+
+
+<!-- LANÇAMENTO FINANCEIRO -->
+<div class="overlay" id="m-lancamento">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="m-lanc-titulo">Novo Lançamento</div>
+      <button class="close-x" onclick="closeModal('m-lancamento')">✕</button>
+    </div>
+    <input type="hidden" id="lanc-id">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Tipo *</label>
+        <select class="form-input" id="lanc-tipo" onchange="toggleLancTipo()">
+          <option value="entrada">Entrada (receber)</option>
+          <option value="saida">Saída (pagar)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Data vencimento *</label>
+        <input class="form-input" type="date" id="lanc-venc">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Descrição *</label>
+        <input class="form-input" id="lanc-desc" placeholder="Ex: Honda BS20, Gráfica março...">
+      </div>
+      <div class="form-group" id="lanc-cli-group">
+        <label class="form-label">Cliente</label>
+        <input class="form-input" id="lanc-cli" list="list-clientes4" placeholder="Vincular cliente">
+        <datalist id="list-clientes4"></datalist>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group" id="lanc-forn-group" style="display:none">
+        <label class="form-label">Fornecedor</label>
+        <select class="form-input" id="lanc-forn">
+          <option value="">Selecione...</option>
+          <option>Gráfica</option><option>Contador</option>
+          <option>Aplicador</option><option>Manutenção</option>
+          <option>Energia</option><option>Outro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Forma de pagamento</label>
+        <select class="form-input" id="lanc-forma">
+          <option value="boleto">Boleto</option>
+          <option value="pix">PIX</option>
+          <option value="transferencia">Transferência</option>
+          <option value="dinheiro">Dinheiro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Valor (R$) *</label>
+        <input class="form-input" type="number" id="lanc-valor" placeholder="0,00">
+      </div>
+    </div>
+    <!-- Parcelamento -->
+    <div style="background:var(--s2);border-radius:8px;padding:12px;margin-bottom:14px">
+      <label class="checkbox-row" style="margin-bottom:8px">
+        <input type="checkbox" id="lanc-parcelado" onchange="toggleParcelado()">
+        <span style="font-size:12px;font-weight:700">Parcelado</span>
+      </label>
+      <div id="lanc-parcelas-row" style="display:none">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Nº de parcelas</label>
+            <input class="form-input" type="number" id="lanc-nparcelas" min="2" max="24" value="2" oninput="calcParcelas()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Valor por parcela</label>
+            <input class="form-input" id="lanc-vparcela" readonly style="background:var(--s3);color:var(--sub)">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select class="form-input" id="lanc-status">
+          <option value="pendente">Pendente</option>
+          <option value="pago">Pago / Recebido</option>
+          <option value="atrasado">Atrasado</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Data pagamento (se pago)</label>
+        <input class="form-input" type="date" id="lanc-dtpag">
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">Observação</label><input class="form-input" id="lanc-obs"></div>
+    <div class="modal-foot">
+      <button class="btn btn-red" id="lanc-del-btn" style="display:none" onclick="excluirLanc()">Excluir</button>
+      <button class="btn btn-ghost" onclick="closeModal('m-lancamento')">Cancelar</button>
+      <button class="btn btn-acc" onclick="salvarLanc()">Salvar</button>
+    </div>
+  </div>
+</div>
 
 <!-- ========== MODALS ========== -->
 
@@ -860,7 +1115,19 @@ const DEFAULT = {
     {id:2,data:'2026-04-01',cli:'Honda',exId:2,tabela:1200,acordado:1200,tipo:'normal',obs:''},
     {id:3,data:'2026-04-01',cli:'Honda',exId:3,tabela:1500,acordado:1500,tipo:'normal',obs:''},
   ],
-  nextId:20
+  nextId:20,
+  lancamentos: [
+    {id:101,tipo:'entrada',venc:'2026-05-17',desc:'Honda BS20 - Rotatória 1',cli:'Honda',forn:'',forma:'boleto',valor:1000,status:'pago',dtpag:'2026-05-10',obs:'',parcela:1,totalParcelas:1},
+    {id:102,tipo:'entrada',venc:'2026-05-31',desc:'Honda BS22 - Unifran 4',cli:'Honda',forn:'',forma:'boleto',valor:1200,status:'pendente',dtpag:'',obs:'',parcela:1,totalParcelas:1},
+    {id:103,tipo:'entrada',venc:'2026-06-28',desc:'Honda BS26 - Rotatória 3',cli:'Honda',forn:'',forma:'boleto',valor:1500,status:'pendente',dtpag:'',obs:'',parcela:1,totalParcelas:1},
+    {id:104,tipo:'saida',venc:'2026-05-05',desc:'Gráfica - impressão maio',cli:'',forn:'Gráfica',forma:'boleto',valor:350,status:'pago',dtpag:'2026-05-05',obs:'',parcela:1,totalParcelas:1},
+    {id:105,tipo:'saida',venc:'2026-05-10',desc:'Aplicador BS20/22',cli:'',forn:'Aplicador',forma:'pix',valor:200,status:'pago',dtpag:'2026-05-10',obs:'',parcela:1,totalParcelas:1},
+    {id:106,tipo:'saida',venc:'2026-05-15',desc:'Contador - mensalidade',cli:'',forn:'Contador',forma:'transferencia',valor:280,status:'pendente',dtpag:'',obs:'',parcela:1,totalParcelas:1},
+    {id:107,tipo:'saida',venc:'2026-04-20',desc:'Energia - abril',cli:'',forn:'Energia',forma:'boleto',valor:180,status:'atrasado',dtpag:'',obs:'',parcela:1,totalParcelas:1},
+    {id:108,tipo:'entrada',venc:'2026-04-15',desc:'Fernando BS22 - parcelado 1/3',cli:'Fernando',forn:'',forma:'pix',valor:400,status:'pago',dtpag:'2026-04-15',obs:'',parcela:1,totalParcelas:3},
+    {id:109,tipo:'entrada',venc:'2026-05-15',desc:'Fernando BS22 - parcelado 2/3',cli:'Fernando',forn:'',forma:'pix',valor:400,status:'pendente',dtpag:'',obs:'',parcela:2,totalParcelas:3},
+    {id:110,tipo:'entrada',venc:'2026-06-15',desc:'Fernando BS22 - parcelado 3/3',cli:'Fernando',forn:'',forma:'pix',valor:400,status:'pendente',dtpag:'',obs:'',parcela:3,totalParcelas:3},
+  ]
 };
 
 // Load from localStorage first (offline fallback), then sync from Sheets
@@ -906,7 +1173,405 @@ function loadFromSheets() {
   .then(data=>{
     if(data && data.placas) {
       S = data;
-      if(!S.leads) S.leads=[];
+      
+// ============ FINANCEIRO ============
+if(!S.lancamentos) S.lancamentos=[];
+
+const R$2 = v => 'R$ '+parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const mesNome = ['','Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const hoje = () => new Date().toISOString().split('T')[0];
+
+function lancStatus(l) {
+  if(l.status==='pago') return 'pago';
+  if(l.status==='atrasado') return 'atrasado';
+  if(l.venc && l.venc < hoje() && l.status==='pendente') return 'atrasado';
+  return 'pendente';
+}
+
+function renderFluxo() {
+  if(!S.lancamentos) S.lancamentos=[];
+  const ano = parseInt(document.getElementById('fluxo-ano')?.value||2026);
+  const view = document.getElementById('fluxo-view')?.value||'mes';
+  const lancs = S.lancamentos.filter(l=>l.venc&&l.venc.startsWith(ano));
+
+  // stats
+  const entradas = lancs.filter(l=>l.tipo==='entrada');
+  const saidas   = lancs.filter(l=>l.tipo==='saida');
+  const totE = entradas.reduce((a,l)=>a+parseFloat(l.valor||0),0);
+  const totS = saidas.reduce((a,l)=>a+parseFloat(l.valor||0),0);
+  const saldo = totE - totS;
+  const atrasados = lancs.filter(l=>lancStatus(l)==='atrasado').length;
+
+  document.getElementById('fluxo-stats').innerHTML=`
+    <div class="stat"><div class="stat-label">Total Entradas</div><div class="stat-val c-green">${R$2(totE)}</div></div>
+    <div class="stat"><div class="stat-label">Total Saídas</div><div class="stat-val c-red">${R$2(totS)}</div></div>
+    <div class="stat"><div class="stat-label">Saldo Período</div><div class="stat-val" style="color:${saldo>=0?'var(--green)':'var(--red)'}">${R$2(saldo)}</div></div>
+    <div class="stat"><div class="stat-label">Em Atraso</div><div class="stat-val c-yellow">${atrasados}</div></div>
+  `;
+
+  // chart
+  let periods = [];
+  if(view==='mes') {
+    for(let m=1;m<=12;m++) periods.push({key:String(m).padStart(2,'0'), label:mesNome[m]});
+  } else {
+    periods = Object.keys(BISEMANAS_2026).map(bs=>({key:'bs'+bs,label:'BS'+bs}));
+  }
+
+  const maxVal = Math.max(...periods.map(p=>{
+    const filter = view==='mes'
+      ? l=>l.venc&&l.venc.substring(5,7)===p.key&&l.venc.startsWith(ano)
+      : l=>{ const bs=p.key.replace('bs',''); const d=BISEMANAS_2026[bs]; return d&&l.venc>=d.ini&&l.venc<=d.fim; };
+    const e=lancs.filter(l=>l.tipo==='entrada'&&filter(l)).reduce((a,l)=>a+parseFloat(l.valor||0),0);
+    const s=lancs.filter(l=>l.tipo==='saida'&&filter(l)).reduce((a,l)=>a+parseFloat(l.valor||0),0);
+    return Math.max(e,s);
+  }),1);
+
+  document.getElementById('fluxo-chart').innerHTML = periods.map(p=>{
+    const filter = view==='mes'
+      ? l=>l.venc&&l.venc.substring(5,7)===p.key&&l.venc.startsWith(ano)
+      : l=>{ const bs=p.key.replace('bs',''); const d=BISEMANAS_2026[bs]; return d&&l.venc>=d.ini&&l.venc<=d.fim; };
+    const e=lancs.filter(l=>l.tipo==='entrada'&&filter(l)).reduce((a,l)=>a+parseFloat(l.valor||0),0);
+    const s=lancs.filter(l=>l.tipo==='saida'&&filter(l)).reduce((a,l)=>a+parseFloat(l.valor||0),0);
+    const sald=e-s;
+    const hE=Math.round((e/maxVal)*100);
+    const hS=Math.round((s/maxVal)*100);
+    return `<div class="fluxo-bar-col">
+      <div style="display:flex;gap:2px;align-items:flex-end;height:100px">
+        <div class="fluxo-bar entrada" style="height:${hE}px;width:48%" title="Entrada: ${R$2(e)}"></div>
+        <div class="fluxo-bar saida" style="height:${hS}px;width:48%" title="Saída: ${R$2(s)}"></div>
+      </div>
+      <div class="fluxo-bar-label">${p.label}</div>
+      <div class="fluxo-saldo" style="color:${sald>=0?'#16a34a':'#dc2626'}">${sald>=0?'+':''}${sald===0?'':R$2(Math.abs(sald))}</div>
+    </div>`;
+  }).join('');
+
+  // tabela
+  const sorted = [...lancs].sort((a,b)=>b.venc.localeCompare(a.venc));
+  const tbody = document.getElementById('fluxo-tbody');
+  if(!sorted.length){tbody.innerHTML='<tr class="empty-row"><td colspan="8">Nenhum lançamento</td></tr>';return;}
+  tbody.innerHTML = sorted.map(l=>{
+    const st=lancStatus(l);
+    const stBadge={pago:'badge-green',pendente:'badge-yellow',atrasado:'badge-red'};
+    const stLabel={pago:'Pago',pendente:'Pendente',atrasado:'Atrasado'};
+    const parcelaStr=l.totalParcelas>1?` (${l.parcela}/${l.totalParcelas})`:'';
+    return `<tr>
+      <td style="font-size:12px">${fmt(l.venc)}</td>
+      <td>${l.desc}${parcelaStr}</td>
+      <td style="font-size:12px;color:var(--sub)">${l.tipo==='entrada'?(l.cli||'—'):(l.forn||'—')}</td>
+      <td><span class="tag-tipo ${l.tipo==='entrada'?'tag-entrada':'tag-saida'}">${l.tipo==='entrada'?'↑ Entrada':'↓ Saída'}</span></td>
+      <td style="font-size:12px;color:var(--sub)">${l.forma||'—'}</td>
+      <td style="font-weight:700;color:${l.tipo==='entrada'?'var(--green)':'var(--red)'}">${R$2(l.valor)}</td>
+      <td><span class="badge ${stBadge[st]}">${stLabel[st]}${st==='atrasado'?` ${diasAte(l.venc)*-1}d`:''}
+      </span></td>
+      <td><button class="btn btn-ghost btn-sm" onclick="editarLanc(${l.id})">Editar</button>
+      ${st==='pendente'||st==='atrasado'?`<button class="btn btn-sm" style="background:#dcfce7;color:#16a34a;border:1px solid #86efac;margin-left:4px" onclick="marcarPago(${l.id})">✓</button>`:''}
+      </td>
+    </tr>`;
+  }).join('');
+
+  // update badges
+  updateFinBadges();
+}
+
+function updateFinBadges() {
+  if(!S.lancamentos) return;
+  const atRec = S.lancamentos.filter(l=>l.tipo==='entrada'&&(lancStatus(l)==='atrasado'||lancStatus(l)==='pendente')).length;
+  const atPag = S.lancamentos.filter(l=>l.tipo==='saida'&&(lancStatus(l)==='atrasado'||lancStatus(l)==='pendente')).length;
+  const nbR=document.getElementById('nb-receber'); if(nbR) nbR.textContent=atRec||'';
+  const nbP=document.getElementById('nb-pagar'); if(nbP) nbP.textContent=atPag||'';
+}
+
+function renderReceber() {
+  if(!S.lancamentos) S.lancamentos=[];
+  const filtro=document.getElementById('f-receber-status')?.value||'';
+  let lancs=S.lancamentos.filter(l=>l.tipo==='entrada');
+  if(filtro) lancs=lancs.filter(l=>lancStatus(l)===filtro);
+  lancs.sort((a,b)=>a.venc.localeCompare(b.venc));
+
+  const pend=S.lancamentos.filter(l=>l.tipo==='entrada'&&lancStatus(l)==='pendente').reduce((a,l)=>a+parseFloat(l.valor||0),0);
+  const atras=S.lancamentos.filter(l=>l.tipo==='entrada'&&lancStatus(l)==='atrasado').reduce((a,l)=>a+parseFloat(l.valor||0),0);
+  const recebido=S.lancamentos.filter(l=>l.tipo==='entrada'&&lancStatus(l)==='pago').reduce((a,l)=>a+parseFloat(l.valor||0),0);
+
+  document.getElementById('receber-stats').innerHTML=`
+    <div class="stat"><div class="stat-label">A Receber</div><div class="stat-val c-yellow">${R$2(pend)}</div></div>
+    <div class="stat"><div class="stat-label">Em Atraso</div><div class="stat-val c-red">${R$2(atras)}</div></div>
+    <div class="stat"><div class="stat-label">Já Recebido</div><div class="stat-val c-green">${R$2(recebido)}</div></div>
+    <div class="stat"><div class="stat-label">Total Previsto</div><div class="stat-val c-acc">${R$2(pend+atras+recebido)}</div></div>
+  `;
+
+  const tbody=document.getElementById('receber-tbody');
+  if(!lancs.length){tbody.innerHTML='<tr class="empty-row"><td colspan="8">Nenhuma entrada</td></tr>';return;}
+  tbody.innerHTML=lancs.map(l=>{
+    const st=lancStatus(l);
+    const stBadge={pago:'badge-green',pendente:'badge-yellow',atrasado:'badge-red'};
+    const stLabel={pago:'Recebido',pendente:'Pendente',atrasado:`Atrasado ${Math.abs(diasAte(l.venc))}d`};
+    const parcelaStr=l.totalParcelas>1?`${l.parcela}/${l.totalParcelas}`:'';
+    return `<tr>
+      <td style="font-size:12px;${st==='atrasado'?'color:var(--red);font-weight:700':''}"><span class="semaforo ${st==='pago'?'sem-green':st==='atrasado'?'sem-red':'sem-yellow'}"></span>${fmt(l.venc)}</td>
+      <td><b>${l.cli||'—'}</b></td>
+      <td style="font-size:12px">${l.desc}</td>
+      <td style="font-size:12px;color:var(--sub)">${parcelaStr}</td>
+      <td style="font-size:12px">${l.forma||'—'}</td>
+      <td style="font-weight:700;color:var(--green)">${R$2(l.valor)}</td>
+      <td><span class="badge ${stBadge[st]}">${stLabel[st]}</span></td>
+      <td style="display:flex;gap:4px">
+        <button class="btn btn-ghost btn-sm" onclick="editarLanc(${l.id})">Editar</button>
+        ${st!=='pago'?`<button class="btn btn-sm" style="background:#dcfce7;color:#16a34a;border:1px solid #86efac" onclick="marcarPago(${l.id})">✓ Recebido</button>`:''}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderPagar() {
+  if(!S.lancamentos) S.lancamentos=[];
+  const filtroF=document.getElementById('f-pagar-forn')?.value||'';
+  const filtroS=document.getElementById('f-pagar-status')?.value||'';
+  let lancs=S.lancamentos.filter(l=>l.tipo==='saida');
+  if(filtroF) lancs=lancs.filter(l=>l.forn===filtroF);
+  if(filtroS) lancs=lancs.filter(l=>lancStatus(l)===filtroS);
+  lancs.sort((a,b)=>a.venc.localeCompare(b.venc));
+
+  const pend=S.lancamentos.filter(l=>l.tipo==='saida'&&lancStatus(l)==='pendente').reduce((a,l)=>a+parseFloat(l.valor||0),0);
+  const atras=S.lancamentos.filter(l=>l.tipo==='saida'&&lancStatus(l)==='atrasado').reduce((a,l)=>a+parseFloat(l.valor||0),0);
+  const pago=S.lancamentos.filter(l=>l.tipo==='saida'&&lancStatus(l)==='pago').reduce((a,l)=>a+parseFloat(l.valor||0),0);
+
+  document.getElementById('pagar-stats').innerHTML=`
+    <div class="stat"><div class="stat-label">A Pagar</div><div class="stat-val c-yellow">${R$2(pend)}</div></div>
+    <div class="stat"><div class="stat-label">Em Atraso</div><div class="stat-val c-red">${R$2(atras)}</div></div>
+    <div class="stat"><div class="stat-label">Já Pago</div><div class="stat-val c-green">${R$2(pago)}</div></div>
+    <div class="stat"><div class="stat-label">Total Previsto</div><div class="stat-val c-acc">${R$2(pend+atras+pago)}</div></div>
+  `;
+
+  const tbody=document.getElementById('pagar-tbody');
+  if(!lancs.length){tbody.innerHTML='<tr class="empty-row"><td colspan="7">Nenhuma saída</td></tr>';return;}
+  tbody.innerHTML=lancs.map(l=>{
+    const st=lancStatus(l);
+    const stBadge={pago:'badge-green',pendente:'badge-yellow',atrasado:'badge-red'};
+    const stLabel={pago:'Pago',pendente:'Pendente',atrasado:`Atrasado ${Math.abs(diasAte(l.venc))}d`};
+    return `<tr>
+      <td style="font-size:12px;${st==='atrasado'?'color:var(--red);font-weight:700':''}"><span class="semaforo ${st==='pago'?'sem-green':st==='atrasado'?'sem-red':'sem-yellow'}"></span>${fmt(l.venc)}</td>
+      <td><b>${l.forn||'—'}</b></td>
+      <td style="font-size:12px">${l.desc}</td>
+      <td style="font-size:12px">${l.forma||'—'}</td>
+      <td style="font-weight:700;color:var(--red)">${R$2(l.valor)}</td>
+      <td><span class="badge ${stBadge[st]}">${stLabel[st]}</span></td>
+      <td style="display:flex;gap:4px">
+        <button class="btn btn-ghost btn-sm" onclick="editarLanc(${l.id})">Editar</button>
+        ${st!=='pago'?`<button class="btn btn-sm" style="background:#dcfce7;color:#16a34a;border:1px solid #86efac" onclick="marcarPago(${l.id})">✓ Pago</button>`:''}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderDRE() {
+  if(!S.lancamentos) S.lancamentos=[];
+  const ano=parseInt(document.getElementById('dre-ano')?.value||2026);
+  const lancs=S.lancamentos.filter(l=>l.venc&&l.venc.startsWith(ano));
+
+  const receita=lancs.filter(l=>l.tipo==='entrada'&&lancStatus(l)==='pago').reduce((a,l)=>a+parseFloat(l.valor||0),0);
+  const receitaPrev=lancs.filter(l=>l.tipo==='entrada').reduce((a,l)=>a+parseFloat(l.valor||0),0);
+  const custos=lancs.filter(l=>l.tipo==='saida'&&lancStatus(l)==='pago').reduce((a,l)=>a+parseFloat(l.valor||0),0);
+  const custosPrev=lancs.filter(l=>l.tipo==='saida').reduce((a,l)=>a+parseFloat(l.valor||0),0);
+  const lucro=receita-custos;
+  const lucroPrev=receitaPrev-custosPrev;
+  const margem=receita>0?((lucro/receita)*100).toFixed(1):0;
+
+  const dreRow=(label,val,cor,bold)=>`
+    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);${bold?'font-weight:700':''}">
+      <span style="font-size:13px">${label}</span>
+      <span style="font-size:13px;color:${cor}">${R$2(val)}</span>
+    </div>`;
+
+  document.getElementById('dre-body').innerHTML=
+    dreRow('Receita Recebida',receita,'var(--green)',false)+
+    dreRow('Custos Pagos',custos,'var(--red)',false)+
+    dreRow('Lucro Líquido',lucro,lucro>=0?'var(--green)':'var(--red)',true)+
+    `<div style="margin-top:12px;padding:10px;background:var(--s2);border-radius:8px;text-align:center">
+      <div style="font-size:11px;color:var(--sub)">MARGEM LÍQUIDA</div>
+      <div style="font-size:24px;font-weight:900;color:${lucro>=0?'var(--green)':'var(--red)'}">${margem}%</div>
+    </div>`;
+
+  // Previsão por mês
+  let prevHtml='';
+  for(let m=1;m<=12;m++){
+    const me=lancs.filter(l=>l.tipo==='entrada'&&mesDeData(l.venc)===m).reduce((a,l)=>a+parseFloat(l.valor||0),0);
+    const ms=lancs.filter(l=>l.tipo==='saida'&&mesDeData(l.venc)===m).reduce((a,l)=>a+parseFloat(l.valor||0),0);
+    const ms2=me-ms;
+    const pct=me>0?Math.min(Math.round((me/(receitaPrev||1))*100*12),100):0;
+    if(me===0&&ms===0) continue;
+    prevHtml+=`<div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+        <span style="font-weight:700">${mesNome[m]}</span>
+        <span style="color:${ms2>=0?'var(--green)':'var(--red)'}">Saldo ${R$2(ms2)}</span>
+      </div>
+      <div style="display:flex;gap:4px;font-size:11px;color:var(--sub);margin-bottom:4px">
+        <span style="color:var(--green)">↑${R$2(me)}</span>
+        <span>|</span>
+        <span style="color:var(--red)">↓${R$2(ms)}</span>
+      </div>
+      <div class="prev-track"><div class="prev-fill" style="width:${pct}%;background:${ms2>=0?'var(--green)':'var(--red)'}"></div></div>
+    </div>`;
+  }
+  document.getElementById('prev-body').innerHTML=prevHtml||'<div style="color:var(--faint);padding:20px;text-align:center">Sem dados</div>';
+
+  // Cenários
+  const receitaContratada=S.vendas.reduce((a,v)=>a+parseFloat(v.acordado||0),0);
+  const taxaOcup=S.exibicoes.length>0?S.exibicoes.filter(e=>e.cli).length/S.exibicoes.length:0;
+  const otimista=receitaContratada*1.2;
+  const pessimista=receitaContratada*0.7;
+  const realista=receitaContratada;
+
+  document.getElementById('cenario-body').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:16px;text-align:center">
+        <div style="font-size:11px;color:var(--sub);margin-bottom:6px;font-weight:700">PESSIMISTA (−30%)</div>
+        <div style="font-size:22px;font-weight:900;color:var(--red)">${R$2(pessimista)}</div>
+        <div style="font-size:11px;color:var(--sub);margin-top:4px">Ocupação ~50%</div>
+      </div>
+      <div style="background:var(--acc-light);border:1px solid #bfdbfe;border-radius:10px;padding:16px;text-align:center">
+        <div style="font-size:11px;color:var(--sub);margin-bottom:6px;font-weight:700">REALISTA (atual)</div>
+        <div style="font-size:22px;font-weight:900;color:var(--acc)">${R$2(realista)}</div>
+        <div style="font-size:11px;color:var(--sub);margin-top:4px">Ocupação ${Math.round(taxaOcup*100)}%</div>
+      </div>
+      <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:16px;text-align:center">
+        <div style="font-size:11px;color:var(--sub);margin-bottom:6px;font-weight:700">OTIMISTA (+20%)</div>
+        <div style="font-size:22px;font-weight:900;color:var(--green)">${R$2(otimista)}</div>
+        <div style="font-size:11px;color:var(--sub);margin-top:4px">Ocupação ~90%</div>
+      </div>
+    </div>
+    <div style="margin-top:16px;padding:12px;background:var(--s2);border-radius:8px;font-size:12px;color:var(--sub)">
+      💡 Baseado nas vendas já registradas. Para refinar as previsões, mantenha os lançamentos financeiros atualizados.
+    </div>
+  `;
+}
+
+// LANÇAMENTO CRUD
+function abrirLancamento(tipo) {
+  document.getElementById('lanc-tipo').value=tipo||'entrada';
+  document.getElementById('lanc-venc').value=hoje();
+  document.getElementById('lanc-del-btn').style.display='none';
+  document.getElementById('lanc-id').value='';
+  toggleLancTipo();
+  // populate cliente datalist
+  const dl=document.getElementById('list-clientes4');
+  if(dl) dl.innerHTML=S.clientes.map(c=>`<option value="${c.nome}">`).join('');
+  openModal('m-lancamento');
+}
+
+function toggleLancTipo() {
+  const tipo=document.getElementById('lanc-tipo').value;
+  const cliGroup=document.getElementById('lanc-cli-group');
+  const fornGroup=document.getElementById('lanc-forn-group');
+  if(tipo==='entrada'){cliGroup.style.display='';fornGroup.style.display='none';}
+  else{cliGroup.style.display='none';fornGroup.style.display='';}
+}
+
+function toggleParcelado() {
+  const chk=document.getElementById('lanc-parcelado').checked;
+  document.getElementById('lanc-parcelas-row').style.display=chk?'block':'none';
+  calcParcelas();
+}
+
+function calcParcelas() {
+  const val=parseFloat(document.getElementById('lanc-valor')?.value||0);
+  const n=parseInt(document.getElementById('lanc-nparcelas')?.value||2);
+  const el=document.getElementById('lanc-vparcela');
+  if(el&&val&&n) el.value=R$2(val/n);
+}
+
+function salvarLanc() {
+  const id=parseInt(document.getElementById('lanc-id').value)||0;
+  const tipo=document.getElementById('lanc-tipo').value;
+  const venc=document.getElementById('lanc-venc').value;
+  const desc=document.getElementById('lanc-desc').value.trim();
+  const valor=parseFloat(document.getElementById('lanc-valor').value)||0;
+  if(!venc||!desc||!valor){alert('Preencha data, descrição e valor');return;}
+
+  const parcelado=document.getElementById('lanc-parcelado').checked;
+  const nParcelas=parcelado?parseInt(document.getElementById('lanc-nparcelas').value)||1:1;
+  const vlParcela=parcelado?valor/nParcelas:valor;
+
+  const base={
+    tipo,desc,cli:document.getElementById('lanc-cli').value.trim(),
+    forn:document.getElementById('lanc-forn').value,
+    forma:document.getElementById('lanc-forma').value,
+    status:document.getElementById('lanc-status').value,
+    dtpag:document.getElementById('lanc-dtpag').value,
+    obs:document.getElementById('lanc-obs').value.trim(),
+  };
+
+  if(id){
+    const idx=S.lancamentos.findIndex(l=>l.id===id);
+    if(idx>-1) S.lancamentos[idx]={...S.lancamentos[idx],...base,venc,valor};
+  } else if(parcelado&&nParcelas>1){
+    // create multiple parcelas
+    for(let i=1;i<=nParcelas;i++){
+      const d=new Date(venc);
+      d.setMonth(d.getMonth()+(i-1));
+      const dStr=d.toISOString().split('T')[0];
+      S.lancamentos.push({id:S.nextId++,...base,venc:dStr,valor:vlParcela,
+        desc:`${desc} (${i}/${nParcelas})`,parcela:i,totalParcelas:nParcelas,status:'pendente'});
+    }
+  } else {
+    S.lancamentos.push({id:S.nextId++,...base,venc,valor,parcela:1,totalParcelas:1});
+  }
+
+  save();
+  closeModal('m-lancamento');
+  updateFinBadges();
+  // refresh whichever fin page is active
+  ['fluxo','receber','pagar','dre'].forEach(p=>{
+    const el=document.getElementById('page-'+p);
+    if(el&&el.classList.contains('active')) renderPage(p);
+  });
+  // clear form
+  ['lanc-id','lanc-desc','lanc-cli','lanc-obs','lanc-venc','lanc-dtpag','lanc-valor'].forEach(i=>{
+    const el=document.getElementById(i); if(el) el.value='';
+  });
+  document.getElementById('lanc-parcelado').checked=false;
+  document.getElementById('lanc-parcelas-row').style.display='none';
+}
+
+function editarLanc(id) {
+  const l=S.lancamentos.find(x=>x.id===id); if(!l) return;
+  document.getElementById('lanc-id').value=l.id;
+  document.getElementById('lanc-tipo').value=l.tipo;
+  document.getElementById('lanc-venc').value=l.venc;
+  document.getElementById('lanc-desc').value=l.desc;
+  document.getElementById('lanc-cli').value=l.cli||'';
+  document.getElementById('lanc-forn').value=l.forn||'';
+  document.getElementById('lanc-forma').value=l.forma||'boleto';
+  document.getElementById('lanc-valor').value=l.valor;
+  document.getElementById('lanc-status').value=l.status||'pendente';
+  document.getElementById('lanc-dtpag').value=l.dtpag||'';
+  document.getElementById('lanc-obs').value=l.obs||'';
+  document.getElementById('lanc-del-btn').style.display='inline-flex';
+  toggleLancTipo();
+  const dl=document.getElementById('list-clientes4');
+  if(dl) dl.innerHTML=S.clientes.map(c=>`<option value="${c.nome}">`).join('');
+  openModal('m-lancamento');
+}
+
+function excluirLanc() {
+  const id=parseInt(document.getElementById('lanc-id').value); if(!id) return;
+  if(!confirm('Excluir lançamento?')) return;
+  S.lancamentos=S.lancamentos.filter(l=>l.id!==id);
+  save(); closeModal('m-lancamento');
+  updateFinBadges();
+}
+
+function marcarPago(id) {
+  const l=S.lancamentos.find(x=>x.id===id); if(!l) return;
+  l.status='pago'; l.dtpag=hoje();
+  save();
+  updateFinBadges();
+  ['fluxo','receber','pagar'].forEach(p=>{
+    const el=document.getElementById('page-'+p);
+    if(el&&el.classList.contains('active')) renderPage(p);
+  });
+}
+
+if(!S.leads) S.leads=[];
       localStorage.setItem('pctrl_v2', JSON.stringify(S));
       populateSelects();
       renderDash();
@@ -953,13 +1618,17 @@ function navTo(page, el) {
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   el.classList.add('active');
-  const titles = {dashboard:'Dashboard',mapa:'Mapa de Placas',calendario:'Calendário de Exibições',disponivel:'Consultar Disponibilidade',leads:'Leads & Pipeline',vendas:'Vendas',clientes:'Clientes',relatorio:'Relatórios',alertas:'Alertas',placas:'Placas'};
+  const titles = {dashboard:'Dashboard',mapa:'Mapa de Placas',fluxo:'Fluxo de Caixa',receber:'Contas a Receber',pagar:'Contas a Pagar',dre:'DRE & Previsão',calendario:'Calendário de Exibições',disponivel:'Consultar Disponibilidade',leads:'Leads & Pipeline',vendas:'Vendas',clientes:'Clientes',relatorio:'Relatórios',alertas:'Alertas',placas:'Placas'};
   document.getElementById('topbar-title').textContent = titles[page]||page;
   renderPage(page);
 }
 
 function renderPage(p) {
   if(p==='mapa') renderMapa();
+  if(p==='fluxo') renderFluxo();
+  if(p==='receber') renderReceber();
+  if(p==='pagar') renderPagar();
+  if(p==='dre') renderDRE();
   if(p==='leads') { renderLeads(); popularPlacasCheck(); document.getElementById('ld-data').value=today(); }
   if(p==='dashboard') renderDash();
   if(p==='calendario') { populateSelects(); renderCal(); }
@@ -1799,6 +2468,7 @@ populateSelects();
 renderDash();
 renderAlertas();
 updateLeadsBadge();
+updateFinBadges();
 // Load fresh data from Sheets on startup
 loadFromSheets();
 
