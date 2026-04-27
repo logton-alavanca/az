@@ -1174,6 +1174,21 @@ function loadFromSheets() {
     if(data && data.placas) {
       S = data;
       
+if(!S.leads) S.leads=[];
+      localStorage.setItem('pctrl_v2', JSON.stringify(S));
+      populateSelects();
+      renderDash();
+      renderAlertas();
+      updateLeadsBadge();
+      showSyncStatus('ok');
+    }
+  })
+  .catch(err=>{
+    console.warn('Load from Sheets failed, using localStorage:', err);
+    showSyncStatus('local');
+  });
+}
+
 // ============ FINANCEIRO ============
 if(!S.lancamentos) S.lancamentos=[];
 
@@ -1568,21 +1583,6 @@ function marcarPago(id) {
   ['fluxo','receber','pagar'].forEach(p=>{
     const el=document.getElementById('page-'+p);
     if(el&&el.classList.contains('active')) renderPage(p);
-  });
-}
-
-if(!S.leads) S.leads=[];
-      localStorage.setItem('pctrl_v2', JSON.stringify(S));
-      populateSelects();
-      renderDash();
-      renderAlertas();
-      updateLeadsBadge();
-      showSyncStatus('ok');
-    }
-  })
-  .catch(err=>{
-    console.warn('Load from Sheets failed, using localStorage:', err);
-    showSyncStatus('local');
   });
 }
 
